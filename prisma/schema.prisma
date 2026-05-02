@@ -1,0 +1,135 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id_user   Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(100)
+  password  String   @db.VarChar(255)
+  role      Role     @default(pasien)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pasien     Pasien?
+  notifikasi Notifikasi[]
+
+  @@map("users")
+}
+
+enum Role {
+  pasien
+  tenaga_medis
+  admin
+}
+
+model Pasien {
+  id_pasien      Int           @id @default(autoincrement())
+  no_rekam_medis String        @unique @default(cuid()) @db.VarChar(50)
+  nama_depan     String        @db.VarChar(100)
+  nama_belakang  String        @db.VarChar(100)
+  alamat         String?       @db.Text
+  no_telp        String?       @db.VarChar(20)
+  tgl_lahir      DateTime?
+  jenis_kelamin  JenisKelamin?
+  gol_darah      GolonganDarah?
+  nik            String?       @unique @db.VarChar(20)
+  nama_darurat   String?       @db.VarChar(150)
+  hub_darurat    String?       @db.VarChar(50)
+  telp_darurat   String?       @db.VarChar(20)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  id_user     Int          @unique
+  user        User         @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  antrian     Antrian[]
+  rekam_medis RekamMedis[]
+
+  @@map("pasien")
+}
+
+enum JenisKelamin {
+  laki_laki
+  perempuan
+}
+
+enum GolonganDarah {
+  A
+  B
+  AB
+  O
+}
+
+model Antrian {
+  id_antrian      Int           @id @default(autoincrement())
+  nomor_antrian   Int
+  poli            Poli
+  tanggal         DateTime      @db.Date
+  keluhan         String?       @db.Text
+  status          StatusAntrian @default(menunggu)
+  waktu_daftar    DateTime      @default(now())
+  estimasi_tunggu Int?
+
+  id_pasien Int
+  pasien    Pasien @relation(fields: [id_pasien], references: [id_pasien], onDelete: Cascade)
+
+  @@map("antrian")
+}
+
+enum Poli {
+  poli_umum
+  poli_gigi
+  poli_anak
+  poli_tht
+  poli_kia
+  laboratorium
+}
+
+enum StatusAntrian {
+  menunggu
+  dipanggil
+  selesai
+  dibatalkan
+}
+
+model RekamMedis {
+  id_rekam_medis  Int      @id @default(autoincrement())
+  tanggal_periksa DateTime @db.Date
+  keluhan         String   @db.Text
+  diagnosa        String?  @db.Text
+  tindakan        String?  @db.Text
+  catatan         String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  id_pasien Int
+  pasien    Pasien @relation(fields: [id_pasien], references: [id_pasien], onDelete: Cascade)
+
+  @@map("rekam_medis")
+}
+
+model Notifikasi {
+  id_notifikasi Int             @id @default(autoincrement())
+  pesan         String          @db.Text
+  jenis         JenisNotifikasi
+  is_read       Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+
+  id_user Int
+  user    User @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+
+  @@map("notifikasi")
+}
+
+enum JenisNotifikasi {
+  antrian_dibuat
+  antrian_dipanggil
+  antrian_selesai
+  antrian_dibatalkan
+  info
+}

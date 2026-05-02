@@ -1,36 +1,218 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏥 AMEDICTU — Backend Setup Guide
 
-## Getting Started
+**Antrian Medic Tunggu** | Proyek Kelompok 28 | Teknik Komputer Undip 2026
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📁 Struktur Folder Backend
+
+```
+amedictu/
+├── prisma/
+│   ├── schema.prisma        ← Skema database (EDIT DI SINI)
+│   └── seed.ts              ← Data awal untuk testing
+│
+├── lib/
+│   ├── prisma.ts            ← Singleton Prisma Client
+│   ├── auth.ts              ← Konfigurasi NextAuth.js
+│   ├── api-helpers.ts       ← Helper: auth guard, response format
+│   └── socket-server.ts     ← Setup Socket.io real-time
+│
+├── app/api/
+│   ├── auth/
+│   │   ├── [...nextauth]/route.ts   ← Handler NextAuth (jangan diubah)
+│   │   └── register/route.ts        ← POST: Registrasi pasien baru
+│   │
+│   ├── beranda/route.ts             ← GET: Data dashboard per role
+│   │
+│   ├── antrian/
+│   │   ├── route.ts                 ← GET: list | POST: ambil antrian
+│   │   └── [id]/route.ts            ← GET/PATCH/DELETE satu antrian
+│   │
+│   ├── rekam-medis/
+│   │   ├── route.ts                 ← GET: list | POST: tambah
+│   │   └── [id]/route.ts            ← GET/PUT/DELETE satu rekam medis
+│   │
+│   ├── pasien/
+│   │   ├── route.ts                 ← GET: semua pasien / profil sendiri
+│   │   └── [id]/route.ts            ← GET/PUT/DELETE satu pasien
+│   │
+│   ├── laporan/route.ts             ← GET: statistik & laporan
+│   └── notifikasi/route.ts          ← GET: notif | PATCH: tandai dibaca
+│
+├── types/
+│   └── next-auth.d.ts               ← Extend tipe NextAuth
+│
+├── server.ts                        ← Custom server + Socket.io
+├── package.json
+└── .env.example                     ← Template environment variables
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Cara Setup (Langkah demi Langkah)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Install Dependencies
 
-## Learn More
+```bash
+npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Setup Environment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Salin file template
+cp .env.example .env
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Edit file .env:
+# - Ganti DATABASE_URL dengan koneksi MySQL kamu
+# - Generate NEXTAUTH_SECRET dengan: openssl rand -base64 32
+```
 
-## Deploy on Vercel
+### 3. Setup Database MySQL
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Buat database baru di MySQL
+mysql -u root -p
+CREATE DATABASE amedictu_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+exit;
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. Jalankan Prisma Migration
+
+```bash
+# Push skema ke database
+npm run db:push
+
+# Atau gunakan migration (lebih proper untuk production)
+npm run db:migrate
+```
+
+### 5. Isi Data Awal (Seed)
+
+```bash
+npm run db:seed
+```
+
+Setelah seed, akun tersedia:
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin | admin123 |
+| Tenaga Medis | dr.sari | dokter123 |
+| Pasien | budi_santoso | pasien123 |
+
+### 6. Jalankan Server
+
+```bash
+# Development
+npm run dev
+
+# Production
+npm run build
+npm run start
+```
+
+Server berjalan di: `http://localhost:3000`
+
+---
+
+## 📡 Daftar API Endpoint
+
+### Auth
+| Method | Endpoint | Akses | Deskripsi |
+|--------|----------|-------|-----------|
+| POST | `/api/auth/register` | Public | Registrasi pasien baru |
+| POST | `/api/auth/signin` | Public | Login (NextAuth) |
+| POST | `/api/auth/signout` | Auth | Logout |
+
+### Beranda
+| Method | Endpoint | Akses | Deskripsi |
+|--------|----------|-------|-----------|
+| GET | `/api/beranda` | Auth | Data dashboard sesuai role |
+
+### Antrian
+| Method | Endpoint | Akses | Deskripsi |
+|--------|----------|-------|-----------|
+| GET | `/api/antrian` | Auth | Daftar antrian |
+| POST | `/api/antrian` | Pasien | Ambil nomor antrian |
+| GET | `/api/antrian/[id]` | Auth | Detail satu antrian |
+| PATCH | `/api/antrian/[id]` | Auth | Update status antrian |
+| DELETE | `/api/antrian/[id]` | Admin | Hapus antrian |
+
+### Rekam Medis
+| Method | Endpoint | Akses | Deskripsi |
+|--------|----------|-------|-----------|
+| GET | `/api/rekam-medis?id_pasien=X` | Auth | Daftar rekam medis |
+| POST | `/api/rekam-medis` | Tenaga Medis | Tambah rekam medis |
+| GET | `/api/rekam-medis/[id]` | Auth | Detail rekam medis |
+| PUT | `/api/rekam-medis/[id]` | Tenaga Medis | Edit rekam medis |
+| DELETE | `/api/rekam-medis/[id]` | Admin | Hapus rekam medis |
+
+### Pasien
+| Method | Endpoint | Akses | Deskripsi |
+|--------|----------|-------|-----------|
+| GET | `/api/pasien` | Auth | Semua pasien / profil sendiri |
+| GET | `/api/pasien/[id]` | Auth | Detail pasien |
+| PUT | `/api/pasien/[id]` | Auth | Update data pasien |
+| DELETE | `/api/pasien/[id]` | Admin | Hapus pasien |
+
+### Laporan
+| Method | Endpoint | Akses | Deskripsi |
+|--------|----------|-------|-----------|
+| GET | `/api/laporan?periode=hari_ini` | Admin/Medis | Statistik & laporan |
+
+Query params `periode`: `hari_ini` \| `minggu_ini` \| `bulan_ini` \| `custom`
+
+### Notifikasi
+| Method | Endpoint | Akses | Deskripsi |
+|--------|----------|-------|-----------|
+| GET | `/api/notifikasi` | Auth | Daftar notifikasi |
+| PATCH | `/api/notifikasi` | Auth | Tandai semua dibaca |
+
+---
+
+## 🔴 Socket.io Events (Real-time)
+
+### Client → Server (emit)
+```javascript
+// Bergabung ke room poli untuk update antrian
+socket.emit("join:poli", "poli_umum")
+
+// Bergabung ke room user untuk notifikasi personal
+socket.emit("join:user", "123")
+```
+
+### Server → Client (listen)
+```javascript
+// Update status antrian (dipanggil, selesai, dll)
+socket.on("antrian:update", (data) => {
+  console.log(data) // { nomor_antrian, status, poli, ... }
+})
+
+// Notifikasi baru masuk
+socket.on("notifikasi:baru", (data) => {
+  console.log(data) // { pesan, jenis, ... }
+})
+```
+
+---
+
+## 🗄️ Struktur Database
+
+```
+users          ← Akun semua pengguna (id_user, username, password, role)
+  └── pasien   ← Data identitas pasien (one-to-one dengan users)
+        ├── antrian      ← Riwayat nomor antrian (one-to-many)
+        └── rekam_medis  ← Riwayat pemeriksaan (one-to-many)
+
+notifikasi     ← Notifikasi per user (many-to-one dengan users)
+```
+
+---
+
+## ⚠️ Catatan untuk Koordinasi dengan Frontend (Programmer 2)
+
+1. **Semua response API** menggunakan format: `{ success, data, message, error }`
+2. **Auth**: Gunakan `useSession()` dari `next-auth/react` di frontend
+3. **Socket**: Import `socket.io-client` dan connect ke `/api/socket`
+4. **Role check**: Cek `session.user.role` untuk tampilkan UI berbeda
