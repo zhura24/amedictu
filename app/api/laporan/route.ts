@@ -1,7 +1,9 @@
 // app/api/laporan/route.ts
+// Sesuai modul: rekapitulasi antrian hari ini + daftar diagnosa terbanyak
+
 import { NextRequest } from "next/server";
 import pool from "@/lib/db";
-import { requireAuth, apiSuccess, apiError, withErrorHandler } from "@/lib/api-helpers";
+import { requireAuth, apiSuccess, withErrorHandler } from "@/lib/api-helpers";
 
 export async function GET(req: NextRequest) {
   return withErrorHandler(async () => {
@@ -9,34 +11,54 @@ export async function GET(req: NextRequest) {
     if (error) return error;
 
     const { searchParams } = new URL(req.url);
-    const periode = searchParams.get("periode") || "hari_ini";
-
-    const today = new Date().toISOString().split("T")[0];
-    let dateFrom = today, dateTo = today;
-
-    if (periode === "minggu_ini") {
-      const d = new Date(); d.setDate(d.getDate() - 7);
-      dateFrom = d.toISOString().split("T")[0];
-    } else if (periode === "bulan_ini") {
-      const d = new Date();
-      dateFrom = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-    } else if (periode === "custom") {
-      dateFrom = searchParams.get("tgl_mulai") || today;
-      dateTo = searchParams.get("tgl_akhir") || today;
-    }
+    const tanggal = searchParams.get("tanggal") || new Date().toISOString().split("T")[0];
 
     const conn = await pool.getConnection();
     try {
-      const [total] = await conn.query<any[]>("SELECT COUNT(*) as total FROM antrian WHERE DATE(tanggal) BETWEEN ? AND ?", [dateFrom, dateTo]);
-      const [selesai] = await conn.query<any[]>("SELECT COUNT(*) as total FROM antrian WHERE DATE(tanggal) BETWEEN ? AND ? AND status='selesai'", [dateFrom, dateTo]);
-      const [menunggu] = await conn.query<any[]>("SELECT COUNT(*) as total FROM antrian WHERE DATE(tanggal) BETWEEN ? AND ? AND status='menunggu'", [dateFrom, dateTo]);
-      const [perPoli] = await conn.query<any[]>("SELECT poli, COUNT(*) as jumlah FROM antrian WHERE DATE(tanggal) BETWEEN ? AND ? GROUP BY poli ORDER BY jumlah DESC", [dateFrom, dateTo]);
-      const [totalPasien] = await conn.query<any[]>("SELECT COUNT(*) as total FROM pasien", []);
+      // Total antrian hari ini (QUE-26)
+      const [total] = await conn.query<any[]>(
+        "SELECT COUNT(*) as total FROM antrian WHERE DATE(tanggal) = ?",
+        [tanggal]
+      );
+
+      // Jumlah per status (QUE-27)
+      const [perStatus] = await conn.query<any[]>(
+        "SELECT status, COUNT(*) as jumlah FROM antrian WHERE DATE(tanggal) = ? GROUP BY status",
+        [tanggal]
+      );
+
+      // Konversi ke object per status
+      const statusMap: Record<string, number> = {
+        menunggu: 0,
+        dipanggil: 0,
+        selesai: 0,
+        dibatalkan: 0,
+      };
+      perStatus.forEach((s: any) => {
+        statusMap[s.status] = parseInt(s.jumlah);
+      });
+
+      // Diagnosa terbanyak hari ini (QUE-28)
+      const [diagnosa] = await conn.query<any[]>(
+        `SELECT diagnosa, COUNT(*) as jumlah 
+         FROM rekam_medis 
+         WHERE DATE(tanggal_periksa) = ? AND diagnosa IS NOT NULL AND diagnosa != ''
+         GROUP BY diagnosa 
+         ORDER BY jumlah DESC 
+         LIMIT 10`,
+        [tanggal]
+      );
 
       return apiSuccess({
-        periode: { jenis: periode, dari: dateFrom, sampai: dateTo },
-        antrian: { total: total[0].total, selesai: selesai[0].total, menunggu: menunggu[0].total, per_poli: perPoli },
-        pasien: { total_terdaftar: totalPasien[0].total },
+        tanggal,
+        rekapitulasi_antrian: {
+          total_antrian: parseInt(total[0].total),
+          selesai_diperiksa: statusMap.selesai,
+          menunggu: statusMap.menunggu,
+          sedang_dipanggil: statusMap.dipanggil,
+          dibatalkan: statusMap.dibatalkan,
+        },
+        daftar_diagnosa_tercatat: diagnosa,
       });
     } finally {
       conn.release();
