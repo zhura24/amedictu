@@ -1,12 +1,10 @@
-// prisma/schema.prisma
-// AMEDICTU - Disesuaikan dengan DPPL Modul 4
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL") // 🔥 WAJIB ADA (INI YANG KURANG)
 }
 
 // ─────────────────────────────────────────────
@@ -74,14 +72,13 @@ enum GolonganDarah {
 
 // ─────────────────────────────────────────────
 // TABEL POLI
-// Sesuai modul: tabel Poli terpisah
 // ─────────────────────────────────────────────
 model Poli {
-  id_poli    Int      @id @default(autoincrement())
-  nama_poli  String   @db.VarChar(100)
-  deskripsi  String?  @db.Text
+  id_poli    Int        @id @default(autoincrement())
+  nama_poli  String     @db.VarChar(100)
+  deskripsi  String?    @db.Text
   status     StatusPoli @default(aktif)
-  createdAt  DateTime @default(now())
+  createdAt  DateTime   @default(now())
 
   antrian    Antrian[]
 
@@ -123,37 +120,32 @@ enum StatusAntrian {
 
 // ─────────────────────────────────────────────
 // TABEL REKAM MEDIS
-// Disesuaikan dengan modul: tambah field vital & resep
 // ─────────────────────────────────────────────
 model RekamMedis {
   id_rekam_medis  Int      @id @default(autoincrement())
   tanggal_periksa DateTime @db.Date
 
-  // Data vital pasien (sesuai modul)
-  tekanan_darah   String?  @db.VarChar(20)  // contoh: "120/80"
-  suhu            Decimal? @db.Decimal(4, 1) // contoh: 36.5
-  denyut_nadi     Int?                        // BPM
-  berat_badan     Decimal? @db.Decimal(5, 1) // kg
-  tinggi_badan    Decimal? @db.Decimal(5, 1) // cm
-  saturasi        Decimal? @db.Decimal(4, 1) // %
+  tekanan_darah   String?  @db.VarChar(20)
+  suhu            Decimal? @db.Decimal(4, 1)
+  denyut_nadi     Int?
+  berat_badan     Decimal? @db.Decimal(5, 1)
+  tinggi_badan    Decimal? @db.Decimal(5, 1)
+  saturasi        Decimal? @db.Decimal(4, 1)
 
-  // Hasil pemeriksaan
   keluhan         String   @db.Text
   diagnosa        String?  @db.Text
   tindakan        String?  @db.Text
 
-  // Resep obat (sesuai modul)
   resep_obat      String?  @db.Text
   aturan_minum    String?  @db.Text
 
-  // Catatan dokter
   catatan         String?  @db.Text
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  id_pasien       Int
-  pasien          Pasien @relation(fields: [id_pasien], references: [id_pasien], onDelete: Cascade)
+  id_pasien Int
+  pasien    Pasien @relation(fields: [id_pasien], references: [id_pasien], onDelete: Cascade)
 
   @@map("rekam_medis")
 }
