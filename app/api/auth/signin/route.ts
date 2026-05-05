@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 
 export async function POST(req: NextRequest) {
@@ -13,25 +13,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const conn = await pool.getConnection();
-    const [rows] = await conn.query<any[]>(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
-    );
-    conn.release();
+    const user = await prisma.user.findUnique({
+      where: { username }
+    });
 
-    if (rows.length === 0) {
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Silakan login terlebih dahulu' },
+        { success: false, error: 'Username atau password salah' },
         { status: 401 }
       );
     }
 
-    const user = rows[0];
-
     if (user.password !== password) {
       return NextResponse.json(
-        { success: false, error: 'Password salah' },
+        { success: false, error: 'Username atau password salah' },
         { status: 401 }
       );
     }
