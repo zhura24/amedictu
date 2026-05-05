@@ -1,84 +1,124 @@
-// prisma/seed.js
-// Jalankan dengan: node prisma/seed.js
-
-const mysql = require("mysql2/promise");
+const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
-async function main() {
-  const conn = await mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "amedictu_db",
-  });
+const prisma = new PrismaClient();
 
+async function main() {
   console.log("🌱 Mulai seeding database AMEDICTU...");
 
-  // Bersihkan data lama
-  await conn.query("SET FOREIGN_KEY_CHECKS = 0");
-  await conn.query("TRUNCATE TABLE notifikasi");
-  await conn.query("TRUNCATE TABLE rekam_medis");
-  await conn.query("TRUNCATE TABLE antrian");
-  await conn.query("TRUNCATE TABLE pasien");
-  await conn.query("TRUNCATE TABLE users");
-  await conn.query("TRUNCATE TABLE poli");
-  await conn.query("SET FOREIGN_KEY_CHECKS = 1");
+  // ── Hapus data (urutan penting karena relasi) ──
+  await prisma.notifikasi.deleteMany();
+  await prisma.rekamMedis.deleteMany();
+  await prisma.antrian.deleteMany();
+  await prisma.pasien.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.poli.deleteMany();
 
-  // ── Isi data Poli ─────────────────────────────
-  await conn.query(`
-    INSERT INTO poli (nama_poli, deskripsi, status) VALUES
-    ('Poli Umum', 'Layanan kesehatan umum', 'aktif'),
-    ('Poli Gigi', 'Layanan kesehatan gigi dan mulut', 'aktif'),
-    ('Poli Anak', 'Layanan kesehatan anak', 'aktif'),
-    ('Poli THT', 'Layanan telinga hidung tenggorokan', 'aktif'),
-    ('Poli KIA', 'Layanan kesehatan ibu dan anak', 'aktif'),
-    ('Laboratorium', 'Layanan laboratorium', 'aktif')
-  `);
+  // ── Poli ─────────────────────────────────────
+  const poli = await prisma.poli.createMany({
+    data: [
+      { nama_poli: "Poli Umum", deskripsi: "Layanan kesehatan umum" },
+      { nama_poli: "Poli Gigi", deskripsi: "Layanan kesehatan gigi dan mulut" },
+      { nama_poli: "Poli Anak", deskripsi: "Layanan kesehatan anak" },
+      { nama_poli: "Poli THT", deskripsi: "Layanan telinga hidung tenggorokan" },
+      { nama_poli: "Poli KIA", deskripsi: "Layanan kesehatan ibu dan anak" },
+      { nama_poli: "Laboratorium", deskripsi: "Layanan laboratorium" },
+    ],
+  });
   console.log("✅ Data poli dibuat");
 
-  // ── Isi akun Admin ────────────────────────────
+  // ── Admin ───────────────────────────────────
   const adminPass = await bcrypt.hash("admin123", 10);
-  await conn.query(
-    "INSERT INTO users (username, password, role, createdAt, updatedAt) VALUES (?, ?, 'admin', NOW(), NOW())",
-    ["admin", adminPass]
-  );
-  console.log("✅ Akun admin dibuat");
+  await prisma.user.create({
+    data: {
+      username: "admin",
+      password: adminPass,
+      role: "admin",
+    },
+  });
+  console.log("✅ Admin dibuat");
 
-  // ── Isi akun Tenaga Medis ─────────────────────
+  // ── Tenaga Medis ────────────────────────────
   const dokterPass = await bcrypt.hash("dokter123", 10);
-  await conn.query(
-    "INSERT INTO users (username, password, role, createdAt, updatedAt) VALUES (?, ?, 'tenaga_medis', NOW(), NOW())",
-    ["dr.sari", dokterPass]
-  );
-  console.log("✅ Akun tenaga medis dibuat");
+  await prisma.user.create({
+    data: {
+      username: "dr.sari",
+      password: dokterPass,
+      role: "tenaga_medis",
+    },
+  });
+  console.log("✅ Tenaga medis dibuat");
 
-  // ── Isi akun Pasien ───────────────────────────
+  // ── Pasien + User ───────────────────────────
   const pasienPass = await bcrypt.hash("pasien123", 10);
-  const [result] = await conn.query(
-    "INSERT INTO users (username, password, role, createdAt, updatedAt) VALUES (?, ?, 'pasien', NOW(), NOW())",
-    ["budi_santoso", pasienPass]
-  );
-  const userId = result.insertId;
 
-  await conn.query(
-    `INSERT INTO pasien 
-      (no_rekam_medis, nama_depan, nama_belakang, no_telp, alamat, jenis_kelamin, gol_darah, nik, nama_darurat, hub_darurat, telp_darurat, id_user, createdAt, updatedAt) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-    ["RM-001", "Budi", "Santoso", "081234567890", "Jl. Diponegoro No. 1, Semarang", "laki_laki", "A", "3374010101900001", "Siti Santoso", "Istri", "081234567891", userId]
-  );
-  console.log("✅ Akun pasien dibuat");
+  const userPasien = await prisma.user.create({
+    data: {
+      username: "budi_santoso",
+      password: pasienPass,
+      role: "pasien",
+    },
+  });
 
-  await conn.end();
+  const pasien = await prisma.pasien.create({
+    data: {
+      nama_depan: "Budi",
+      nama_belakang: "Santoso",
+      alamat: "Jl. Diponegoro No. 1, Semarang",
+      no_telp: "081234567890",
+      jenis_kelamin: "laki_laki",
+      gol_darah: "A",
+      nik: "3374010101900001",
+      nama_darurat: "Siti Santoso",
+      hub_darurat: "Istri",
+      telp_darurat: "081234567891",
+      user: {
+        connect: { id_user: userPasien.id_user },
+      },
+    },
+  });
+  console.log("✅ Pasien dibuat");
+
+  // ── Contoh Antrian ──────────────────────────
+  const poliUmum = await prisma.poli.findFirst({
+    where: { nama_poli: "Poli Umum" },
+  });
+
+  await prisma.antrian.create({
+    data: {
+      nomor_antrian: 1,
+      tanggal: new Date(),
+      keluhan: "Demam dan pusing",
+      pasien: {
+        connect: { id_pasien: pasien.id_pasien },
+      },
+      poli: {
+        connect: { id_poli: poliUmum.id_poli },
+      },
+    },
+  });
+  console.log("✅ Antrian dibuat");
+
+  // ── Notifikasi ──────────────────────────────
+  await prisma.notifikasi.create({
+    data: {
+      pesan: "Antrian berhasil dibuat",
+      jenis: "antrian_dibuat",
+      user: {
+        connect: { id_user: userPasien.id_user },
+      },
+    },
+  });
+  console.log("✅ Notifikasi dibuat");
 
   console.log("\n🎉 Seeding selesai!");
-  console.log("────────────────────────────────────────────────");
-  console.log("Admin        → username: admin        | password: admin123");
-  console.log("Tenaga Medis → username: dr.sari      | password: dokter123");
-  console.log("Pasien       → username: budi_santoso | password: pasien123");
-  console.log("────────────────────────────────────────────────");
 }
 
-main().catch((e) => {
-  console.error("❌ Error:", e.message);
-  process.exit(1);
-});
+main()
+  .catch((e) => {
+    console.error("❌ Error:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
