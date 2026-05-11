@@ -216,3 +216,4 @@ notifikasi     ← Notifikasi per user (many-to-one dengan users)
 2. **Auth**: Gunakan `useSession()` dari `next-auth/react` di frontend
 3. **Socket**: Import `socket.io-client` dan connect ke `/api/socket`
 4. **Role check**: Cek `session.user.role` untuk tampilkan UI berbeda
+5. Ini Colin
