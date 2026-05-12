@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-     "dev": "ts-node server.ts",
+  "dev": "next dev",
   "build": "next build",
-  "start": "node -r ts-node/register server.ts",
+  "start": "next start",
   "seed": "node prisma/seed.js"
   },
   "dependencies": {
