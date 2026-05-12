@@ -2,7 +2,11 @@
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import pool from "@/lib/db";
-import { apiSuccess, apiError, withErrorHandler } from "@/lib/api-helpers";
+import {
+  apiSuccess,
+  apiError,
+  withErrorHandler
+} from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
   return withErrorHandler(async () => {
@@ -39,22 +43,16 @@ export async function POST(req: NextRequest) {
     const conn = await pool.getConnection();
 
     try {
-      console.log("DATABASE CONNECTED");
-
       const [existing] = await conn.query<any[]>(
         "SELECT id_user FROM users WHERE username = ?",
         [username]
       );
-
-      console.log("EXISTING USER:", existing);
 
       if (existing.length > 0) {
         return apiError("Username sudah digunakan", 409);
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
-
-      console.log("HASHED PASSWORD CREATED");
 
       const [userResult] = await conn.query<any>(
         `INSERT INTO users 
@@ -63,15 +61,13 @@ export async function POST(req: NextRequest) {
         [username, hashedPassword]
       );
 
-      console.log("USER INSERT RESULT:", userResult);
-
       if (!userResult.insertId) {
         return apiError("Gagal membuat user");
       }
 
       const noRekamMedis = "RM-" + Date.now();
 
-      const [pasienResult] = await conn.query<any>(
+      await conn.query(
         `INSERT INTO pasien 
         (
           no_rekam_medis,
@@ -102,8 +98,6 @@ export async function POST(req: NextRequest) {
         ]
       );
 
-      console.log("PASIEN INSERT RESULT:", pasienResult);
-
       return apiSuccess(
         {
           username,
@@ -112,18 +106,8 @@ export async function POST(req: NextRequest) {
         "Registrasi berhasil! Silakan login.",
         201
       );
-    } catch (err) {
-      console.error("REGISTER ERROR:", err);
-
-      return apiError(
-        err instanceof Error
-          ? err.message
-          : "Terjadi kesalahan saat registrasi",
-        500
-      );
     } finally {
       conn.release();
-      console.log("DATABASE CONNECTION RELEASED");
     }
   });
 }
