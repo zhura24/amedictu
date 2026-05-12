@@ -2,6 +2,21 @@
 import { NextRequest } from "next/server";
 import pool from "@/lib/db";
 import { requireAuth, apiSuccess, apiError, withErrorHandler } from "@/lib/api-helpers";
+import Pusher from "pusher";
+
+const pusherServer = new Pusher({
+  appId: process.env.PUSHER_APP_ID!,
+  key: process.env.PUSHER_KEY!,
+  secret: process.env.PUSHER_SECRET!,
+  cluster: process.env.PUSHER_CLUSTER!,
+  useTLS: true,
+});
+
+const pesanNotif: Record<string, string> = {
+  dipanggil: "Nomor antrian Anda sedang dipanggil! Segera menuju loket.",
+  selesai: "Antrian Anda telah selesai. Terima kasih sudah berkunjung.",
+  dibatalkan: "Antrian Anda telah dibatalkan.",
+};
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withErrorHandler(async () => {
@@ -33,11 +48,38 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { status } = body;
     const validStatus = ["dipanggil", "selesai", "dibatalkan"];
     if (!validStatus.includes(status)) return apiError("Status tidak valid");
+
     const conn = await pool.getConnection();
     try {
       const [rows] = await conn.query<any[]>("SELECT * FROM antrian WHERE id_antrian = ?", [id]);
       if (!rows[0]) return apiError("Antrian tidak ditemukan", 404);
+
       await conn.query("UPDATE antrian SET status = ? WHERE id_antrian = ?", [status, id]);
+
+      // Trigger Pusher real-time notification
+      await pusherServer.trigger(
+        `antrian-${rows[0].id_pasien}`,
+        "status-update",
+        {
+          id_antrian: id,
+          status: status,
+          nomor_antrian: rows[0].nomor_antrian,
+          poli: rows[0].poli,
+          pesan: pesanNotif[status] || "",
+        }
+      );
+
+      // Trigger juga ke channel poli untuk update daftar antrian
+      await pusherServer.trigger(
+        `poli-${rows[0].poli}`,
+        "antrian-update",
+        {
+          id_antrian: id,
+          status: status,
+          nomor_antrian: rows[0].nomor_antrian,
+        }
+      );
+
       return apiSuccess({ id_antrian: id, status }, `Status berhasil diubah ke ${status}`);
     } finally {
       conn.release();
