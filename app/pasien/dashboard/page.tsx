@@ -111,7 +111,7 @@ export default function PasienDashboard() {
           </div>
         </Link>
 
-        <Link href="#" style={{ textDecoration: 'none' }}>
+        <Link href="/pasien/jadwal-dokter" style={{ textDecoration: 'none' }}>
           <div className={styles.card} style={{ transition: 'transform 0.2s', cursor: 'pointer', height: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#ebf8ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '1rem', color: '#3182ce' }}>
