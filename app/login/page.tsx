@@ -4,21 +4,37 @@ import Link from "next/link";
 import { useState } from "react";
 import styles from "./page.module.css";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if ((username === "budi_santoso" || username === "Budi Santoso") && password === "pasien123") {
-      router.push("/pasien/dashboard");
-    } else {
-      setError("Username atau kata sandi salah!");
+    setIsLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        username,
+        password,
+      });
+
+      if (result?.error) {
+        setError("Username atau kata sandi salah!");
+      } else {
+        router.push("/pasien/dashboard");
+      }
+    } catch (err) {
+      setError("Terjadi kesalahan sistem. Silakan coba lagi.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -90,7 +106,9 @@ export default function LoginPage() {
               </button>
             </div>
             
-            <button type="submit" className={styles.button}>Masuk</button>
+            <button type="submit" className={styles.button} disabled={isLoading}>
+              {isLoading ? "Sedang Masuk..." : "Masuk"}
+            </button>
           </form>
           
           <div className={styles.divider}>atau</div>
