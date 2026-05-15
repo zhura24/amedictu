@@ -173,3 +173,19 @@ enum JenisNotifikasi {
   antrian_dibatalkan
   info
 }
+
+// ─────────────────────────────────────────────
+// TABEL JADWAL DOKTER
+// ─────────────────────────────────────────────
+model JadwalDokter {
+  id_jadwal   Int      @id @default(autoincrement())
+  nama_dokter String   @db.VarChar(150)
+  spesialis   String   @db.VarChar(100)
+  hari        String   @db.VarChar(20) // Senin, Selasa, dst
+  jam_mulai   String   @db.VarChar(10) // 08:00
+  jam_selesai String   @db.VarChar(10) // 12:00
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("jadwal_dokter")
+}
