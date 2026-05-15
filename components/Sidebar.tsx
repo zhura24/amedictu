@@ -157,7 +157,7 @@ export default function Sidebar({ role }: SidebarProps) {
         <button
           className={styles.logoutBtn}
           onClick={() => {
-            signOut({ callbackUrl: "/" });
+            signOut();
           }}
           style={{
             display: 'flex',
