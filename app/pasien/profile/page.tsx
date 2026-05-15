@@ -101,7 +101,10 @@ export default function DataPasien() {
             </div>
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Jenis Kelamin</p>
-              <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>{formData.jenis_kelamin === 'laki_laki' ? 'Laki-laki' : 'Perempuan'}</p>
+              <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                {formData.jenis_kelamin === 'laki_laki' ? 'Laki-laki' : 
+                 formData.jenis_kelamin === 'perempuan' ? 'Perempuan' : '-'}
+              </p>
             </div>
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Nomor Telepon</p>

@@ -2,12 +2,46 @@
 
 import styles from "../../../components/UI.module.css";
 import Link from "next/link";
-
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
 export default function PasienDashboard() {
   const { data: session } = useSession();
+  const [myAntrean, setMyAntrean] = useState<any>(null);
+  const [sedangDipanggil, setSedangDipanggil] = useState<string>("-");
+  const [loading, setLoading] = useState(true);
   const currentDate = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 1. Ambil antrean saya
+        const resMy = await fetch("/api/antrean");
+        const dataMy = await resMy.json();
+        if (dataMy.success && dataMy.data.length > 0) {
+          // Cari antrean yang masih menunggu atau dipanggil
+          const active = dataMy.data.find((a: any) => a.status === "menunggu" || a.status === "dipanggil");
+          setMyAntrean(active || dataMy.data[0]); // Ambil yang aktif atau yang terbaru
+        }
+
+        // 2. Ambil status global (siapa yang dipanggil)
+        const resGlobal = await fetch("/api/antrean"); // Sementara pakai endpoint yang sama
+        const dataGlobal = await resGlobal.json();
+        if (dataGlobal.success) {
+          const dipanggil = dataGlobal.data.find((a: any) => a.status === "dipanggil");
+          if (dipanggil) {
+            setSedangDipanggil(`A-${String(dipanggil.nomor_antrian).padStart(3, '0')}`);
+          }
+        }
+      } catch (err) {
+        console.error("Gagal memuat data dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (session) fetchData();
+  }, [session]);
 
   return (
     <div>
@@ -40,15 +74,20 @@ export default function PasienDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
         <div className={styles.card} style={{ textAlign: 'center', padding: '1.5rem' }}>
           <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>NOMOR ANTRIAN SAYA</p>
-          <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)' }}>A-028</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)' }}>
+            {myAntrean ? `A-${String(myAntrean.nomor_antrian).padStart(3, '0')}` : "-"}
+          </div>
+          {myAntrean && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>{myAntrean.nama_poli}</p>}
         </div>
         <div className={styles.card} style={{ textAlign: 'center', padding: '1.5rem' }}>
           <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SEDANG DIPANGGIL</p>
-          <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)' }}>A-020</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)' }}>{sedangDipanggil}</div>
         </div>
         <div className={styles.card} style={{ textAlign: 'center', padding: '1.5rem' }}>
           <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ESTIMASI DIPANGGIL</p>
-          <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)' }}>±24 menit</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)' }}>
+            {myAntrean && myAntrean.status === 'menunggu' ? "±15 menit" : "-"}
+          </div>
         </div>
       </div>
 
@@ -120,3 +159,4 @@ export default function PasienDashboard() {
     </div>
   );
 }
+
