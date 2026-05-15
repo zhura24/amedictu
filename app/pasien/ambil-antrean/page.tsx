@@ -1,28 +1,67 @@
 "use client";
 
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import styles from "../../../components/UI.module.css";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AmbilAntrean() {
-  const [selectedPoli, setSelectedPoli] = useState("Poli Umum");
+  const { data: session } = useSession();
+  const [polis, setPolis] = useState<any[]>([]);
+  const [selectedPoli, setSelectedPoli] = useState<number | null>(null);
   const [keluhan, setKeluhan] = useState("");
+  const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [antreanResult, setAntreanResult] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetch("/api/poli")
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) setPolis(res.data);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPoli) {
       alert("Silakan pilih poli tujuan");
       return;
     }
-    // Simulate submission state change to match Figma state 5
-    setIsSubmitted(true);
-    // In a real app we would navigate or show a success modal here.
-    // router.push("/pasien/dashboard");
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/antrean", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_poli: selectedPoli,
+          keluhan,
+          tanggal
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAntreanResult(data.data);
+        setIsSubmitted(true);
+        alert("Antrean berhasil diambil!");
+      } else {
+        alert(data.error || "Gagal mengambil antrean");
+      }
+    } catch (err) {
+      alert("Terjadi kesalahan sistem");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const currentDate = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Memuat layanan...</div>;
 
   return (
     <div>
@@ -49,37 +88,37 @@ export default function AmbilAntrean() {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1.25rem' }}>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>NAMA PASIEN</label>
-              <input type="text" value="Budi Santoso" readOnly style={{ width: '100%', padding: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', fontWeight: 500, fontFamily: 'inherit', outline: 'none', cursor: 'default' }} />
+              <input type="text" value={session?.user?.nama || ""} readOnly style={{ width: '100%', padding: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', fontWeight: 500, fontFamily: 'inherit', outline: 'none', cursor: 'default' }} />
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>NOMOR REKAM MEDIS</label>
-              <input type="text" value="RM-000123" readOnly style={{ width: '100%', padding: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', fontWeight: 500, fontFamily: 'inherit', outline: 'none', cursor: 'default' }} />
+              <input type="text" value={session?.user?.id_pasien ? `RM-${String(session.user.id_pasien).padStart(6, '0')}` : "-"} readOnly style={{ width: '100%', padding: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', fontWeight: 500, fontFamily: 'inherit', outline: 'none', cursor: 'default' }} />
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>PILIH POLI LAYANAN</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                {['Poli Umum', 'Poli Gigi', 'Poli Anak', 'Poli THT', 'Poli KIA', 'Laboratorium'].map((poli) => (
+                {polis.map((poli) => (
                   <div 
-                    key={poli} 
-                    onClick={() => setSelectedPoli(poli)}
+                    key={poli.id_poli} 
+                    onClick={() => setSelectedPoli(poli.id_poli)}
                     style={{ 
                       padding: '1rem', 
-                      border: selectedPoli === poli ? '2px solid var(--primary)' : '1px solid #e5e7eb',
+                      border: selectedPoli === poli.id_poli ? '2px solid var(--primary)' : '1px solid #e5e7eb',
                       borderRadius: 'var(--radius-md)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      backgroundColor: selectedPoli === poli ? '#ebf8f8' : 'white'
+                      backgroundColor: selectedPoli === poli.id_poli ? '#ebf8f8' : 'white'
                     }}
                   >
                     <div>
-                      <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>{poli}</p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Kuota: 50 tersisa</p>
+                      <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>{poli.nama_poli}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{poli.deskripsi || "Layanan Aktif"}</p>
                     </div>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: selectedPoli === poli ? '4px solid var(--primary)' : '1px solid #d1d5db', backgroundColor: 'white' }}></div>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: selectedPoli === poli.id_poli ? '4px solid var(--primary)' : '1px solid #d1d5db', backgroundColor: 'white' }}></div>
                   </div>
                 ))}
               </div>
@@ -87,7 +126,7 @@ export default function AmbilAntrean() {
 
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TANGGAL KUNJUNGAN</label>
-              <input type="date" defaultValue="2026-04-22" style={{ width: '100%', padding: '0.875rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)', fontFamily: 'inherit', fontWeight: 500 }} />
+              <input type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} style={{ width: '100%', padding: '0.875rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)', fontFamily: 'inherit', fontWeight: 500 }} />
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
@@ -101,8 +140,8 @@ export default function AmbilAntrean() {
               />
             </div>
 
-            <button type="submit" style={{ width: '100%', padding: '1rem', background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)', color: 'white', fontWeight: 700, borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>
-              Ambil Nomor Antrian
+            <button type="submit" disabled={isSubmitting} style={{ width: '100%', padding: '1rem', background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)', color: 'white', fontWeight: 700, borderRadius: 'var(--radius-md)', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontSize: '1rem', opacity: isSubmitting ? 0.7 : 1 }}>
+              {isSubmitting ? "Memproses..." : "Ambil Nomor Antrian"}
             </button>
           </form>
         </div>
@@ -113,51 +152,31 @@ export default function AmbilAntrean() {
           <div className={styles.card} style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)', padding: '1.5rem', textAlign: 'center', color: 'white' }}>
               <p style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.5rem' }}>Nomor Antrian Anda</p>
-              <h2 style={{ fontSize: '3rem', fontWeight: 800 }}>{isSubmitted ? 'A-028' : '-'}</h2>
-              <p style={{ fontSize: '1rem', opacity: 0.9 }}>{selectedPoli}</p>
+              <h2 style={{ fontSize: '3rem', fontWeight: 800 }}>{isSubmitted ? `A-${String(antreanResult?.nomor_antrian).padStart(3, '0')}` : '-'}</h2>
+              <p style={{ fontSize: '1rem', opacity: 0.9 }}>{polis.find(p => p.id_poli === selectedPoli)?.nama_poli || "Pilih Poli"}</p>
             </div>
             <div style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '1rem' }}>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Tanggal Kunjungan</span>
-                <strong style={{ color: 'var(--text-main)', fontSize: '0.875rem' }}>22 April 2026</strong>
+                <strong style={{ color: 'var(--text-main)', fontSize: '0.875rem' }}>{new Date(tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '1rem' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Dokter</span>
-                <strong style={{ color: 'var(--text-main)', fontSize: '0.875rem' }}>Dr. Sari</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Estimasi Tunggu</span>
-                <strong style={{ color: 'var(--primary)', fontSize: '0.875rem' }}>± 25 menit</strong>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Status</span>
+                <strong style={{ color: 'var(--primary)', fontSize: '0.875rem' }}>{isSubmitted ? "MENUNGGU" : "-"}</strong>
               </div>
             </div>
           </div>
 
           <div className={styles.card} style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{ backgroundColor: 'var(--primary-dark)', padding: '1rem 1.5rem', color: 'white' }}>
-              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, letterSpacing: '0.05em' }}>STATUS ANTRIAN SAAT INI</h3>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: 700, letterSpacing: '0.05em' }}>INFORMASI PENTING</h3>
             </div>
             <div style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Sedang Dipanggil</span>
-                <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>A-020</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Berikutnya</span>
-                <strong style={{ color: 'var(--text-main)', fontSize: '1rem' }}>A-021</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Antrian Anda</span>
-                <strong style={{ color: '#d97706', fontSize: '1rem' }}>{isSubmitted ? 'A-028' : '-'}</strong>
-              </div>
-
-              <div style={{ paddingTop: '1.5rem', borderTop: '1px solid #f3f4f6' }}>
-                <h4 style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>INFORMASI PENTING</h4>
-                <ol style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1rem', margin: 0, lineHeight: 1.6 }}>
-                  <li>Hadir 15 menit sebelum estimasi waktu panggil</li>
-                  <li>Bawa kartu identitas & kartu rekam medis</li>
-                  <li>Nomor hangus jika tidak hadir saat dipanggil</li>
-                </ol>
-              </div>
+              <ol style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1rem', margin: 0, lineHeight: 1.6 }}>
+                <li>Hadir 15 menit sebelum estimasi waktu panggil</li>
+                <li>Bawa kartu identitas & kartu rekam medis</li>
+                <li>Nomor hangus jika tidak hadir saat dipanggil</li>
+              </ol>
             </div>
           </div>
 
@@ -166,3 +185,4 @@ export default function AmbilAntrean() {
     </div>
   );
 }
+

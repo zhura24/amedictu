@@ -1,39 +1,78 @@
 "use client";
 
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import styles from "../../../components/UI.module.css";
-import { useState } from "react";
 
 export default function DataPasien() {
+  const { data: session } = useSession();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    nama_depan: "Budi",
-    nama_belakang: "Santoso",
-    nik: "3271012345678901",
-    tgl_lahir: "1990-05-15",
+    nama_depan: "",
+    nama_belakang: "",
+    nik: "",
+    tgl_lahir: "",
     jenis_kelamin: "laki_laki",
     gol_darah: "O",
-    no_telp: "081234567890",
-    alamat: "Jl. Merdeka No. 45, Bandung"
+    no_telp: "",
+    alamat: "",
+    password_lama: "",
+    password_baru: "",
+    konfirmasi_password_baru: ""
   });
+
+  useEffect(() => {
+    if (session?.user?.id_pasien) {
+      fetch(`/api/pasien/${session.user.id_pasien}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            setFormData({
+              ...formData,
+              ...res.data,
+              tgl_lahir: res.data.tgl_lahir ? res.data.tgl_lahir.split('T')[0] : "",
+              password_lama: "",
+              password_baru: "",
+              konfirmasi_password_baru: ""
+            });
+          }
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [session]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formElement = e.target as HTMLFormElement;
-    const password = (formElement.elements.namedItem('password') as HTMLInputElement)?.value;
-    const confirmPassword = (formElement.elements.namedItem('confirm_password') as HTMLInputElement)?.value;
     
-    if (password && password !== confirmPassword) {
+    if (formData.password_baru && formData.password_baru !== formData.konfirmasi_password_baru) {
       alert("Password baru dan konfirmasi password tidak cocok!");
       return;
     }
     
-    alert("Data Pasien (dan Password) berhasil diperbarui!");
-    setIsEditing(false); // Switch back to view mode
+    try {
+      const res = await fetch(`/api/pasien/${session?.user?.id_pasien}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Profil berhasil diperbarui!");
+        setIsEditing(false);
+      } else {
+        alert(data.error || "Gagal memperbarui profil");
+      }
+    } catch (err) {
+      alert("Terjadi kesalahan sistem");
+    }
   };
+
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Memuat data...</div>;
 
   return (
     <div>
@@ -132,16 +171,18 @@ export default function DataPasien() {
 
             <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-main)' }}>Keamanan Akun</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>Password Lama</label>
+                  <input type="password" placeholder="Wajib jika ubah password" name="password_lama" value={formData.password_lama} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }} />
+                </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>Password Baru</label>
-                  <input type="password" placeholder="Kosongkan jika tidak ingin mengubah" name="password" onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }} />
+                  <input type="password" placeholder="Kosongkan jika tidak ingin mengubah" name="password_baru" value={formData.password_baru} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.875rem' }}>Konfirmasi Password Baru</label>
-                  <input type="password" placeholder="Ulangi password baru" name="confirm_password" onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }} />
+                  <input type="password" placeholder="Ulangi password baru" name="konfirmasi_password_baru" value={formData.konfirmasi_password_baru} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }} />
                 </div>
-              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '1rem' }}>

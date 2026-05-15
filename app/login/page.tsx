@@ -28,8 +28,20 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError("Username atau kata sandi salah!");
+        setIsLoading(false);
       } else {
-        router.push("/pasien/dashboard");
+        // Ambil data session terbaru untuk cek role
+        const res = await fetch("/api/auth/session");
+        const session = await res.json();
+        const role = session?.user?.role;
+
+        if (role === "admin") {
+          router.push("/admin/dashboard");
+        } else if (role === "tenaga_medis") {
+          router.push("/medis/dashboard");
+        } else {
+          router.push("/pasien/dashboard");
+        }
       }
     } catch (err) {
       setError("Terjadi kesalahan sistem. Silakan coba lagi.");

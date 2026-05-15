@@ -3,7 +3,10 @@
 import styles from "../../../components/UI.module.css";
 import Link from "next/link";
 
+import { useSession } from "next-auth/react";
+
 export default function PasienDashboard() {
+  const { data: session } = useSession();
   const currentDate = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
@@ -27,7 +30,7 @@ export default function PasienDashboard() {
         boxShadow: 'var(--shadow-md)'
       }}>
         <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-0.5px' }}>
-          Selamat pagi, BUDI SANTOSO!
+          Selamat pagi, {session?.user?.nama?.toUpperCase() || "PASIEN"}!
         </h2>
         <p style={{ fontSize: '1rem', opacity: 0.9 }}>
           Kelola antrian klinik Anda dengan mudah

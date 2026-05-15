@@ -4,21 +4,38 @@ import Link from "next/link";
 import { useState } from "react";
 import styles from "../../login/page.module.css";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (username === "admin" && password === "admin123") {
-      router.push("/admin/dashboard");
-    } else {
-      setError("Username atau kata sandi salah!");
+    setIsLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        username,
+        password,
+        role: "admin" // Kunci agar hanya admin yang bisa login di sini
+      });
+
+      if (result?.error) {
+        setError("Username atau kata sandi salah!");
+      } else {
+        router.push("/admin/dashboard");
+      }
+    } catch (err) {
+      setError("Terjadi kesalahan sistem.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,7 +94,9 @@ export default function AdminLoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button}>Masuk Sebagai Admin</button>
+            <button type="submit" className={styles.button} disabled={isLoading}>
+              {isLoading ? "Memproses..." : "Masuk Sebagai Admin"}
+            </button>
           </form>
           
           <p className={styles.linkText} style={{ marginTop: '2rem' }}>

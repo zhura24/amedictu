@@ -4,23 +4,38 @@ import Link from "next/link";
 import { useState } from "react";
 import styles from "../../login/page.module.css";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function MedisLoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // reset error
-    if (username === "dr.sari" && password === "dokter123") {
-      router.push("/medis/dashboard");
-    } else if (username === "admin" && password === "admin123") {
-      router.push("/admin/dashboard");
-    } else {
-      setError("Username atau kata sandi salah!");
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        username,
+        password,
+        role: "tenaga_medis" // Kunci agar hanya tenaga medis yang bisa login di sini
+      });
+
+      if (result?.error) {
+        setError("Username atau kata sandi salah!");
+      } else {
+        router.push("/medis/dashboard");
+      }
+    } catch (err) {
+      setError("Terjadi kesalahan sistem.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,7 +94,9 @@ export default function MedisLoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button}>Masuk</button>
+            <button type="submit" className={styles.button} disabled={isLoading}>
+              {isLoading ? "Memproses..." : "Masuk"}
+            </button>
           </form>
           
           <p className={styles.linkText} style={{ marginTop: '2rem' }}>
