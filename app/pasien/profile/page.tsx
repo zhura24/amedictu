@@ -13,8 +13,8 @@ export default function DataPasien() {
     nama_belakang: "",
     nik: "",
     tgl_lahir: "",
-    jenis_kelamin: "laki_laki",
-    gol_darah: "O",
+    jenis_kelamin: "",
+    gol_darah: "",
     no_telp: "",
     alamat: "",
     password_lama: "",
@@ -151,14 +151,16 @@ export default function DataPasien() {
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Jenis Kelamin</label>
-                <select name="jenis_kelamin" value={formData.jenis_kelamin} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }}>
+                <select name="jenis_kelamin" value={formData.jenis_kelamin || ""} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }}>
+                  <option value="" disabled>-- Pilih Jenis Kelamin --</option>
                   <option value="laki_laki">Laki-laki</option>
                   <option value="perempuan">Perempuan</option>
                 </select>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Golongan Darah</label>
-                <select name="gol_darah" value={formData.gol_darah} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }}>
+                <select name="gol_darah" value={formData.gol_darah || ""} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', fontFamily: 'inherit' }}>
+                  <option value="" disabled>-- Pilih Golongan Darah --</option>
                   <option value="A">A</option>
                   <option value="B">B</option>
                   <option value="AB">AB</option>
