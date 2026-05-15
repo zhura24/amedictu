@@ -1,6 +1,8 @@
 // app/api/laporan/route.ts
 // Sesuai modul: rekapitulasi antrian hari ini + daftar diagnosa terbanyak
 
+export const dynamic = 'force-dynamic';
+
 import { NextRequest } from "next/server";
 import pool from "@/lib/db";
 import { requireAuth, apiSuccess, withErrorHandler } from "@/lib/api-helpers";

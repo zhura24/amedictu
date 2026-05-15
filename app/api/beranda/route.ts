@@ -1,4 +1,6 @@
 // app/api/beranda/route.ts
+export const dynamic = 'force-dynamic';
+
 import { NextRequest } from "next/server";
 import pool from "@/lib/db";
 import { requireAuth, apiSuccess, apiError, withErrorHandler } from "@/lib/api-helpers";

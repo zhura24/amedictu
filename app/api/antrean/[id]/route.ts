@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // app/api/antrean/[id]/route.ts
 import { NextRequest } from "next/server";
 import pool from "@/lib/db";
