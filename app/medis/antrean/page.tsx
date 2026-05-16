@@ -19,6 +19,15 @@ interface Antrean {
 export default function KelolaAntrean() {
   const [antreanList, setAntreanList] = useState<Antrean[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [now, setNow] = useState(new Date().getTime());
+
+  // Update waktu setiap 10 detik untuk memicu re-render tombol Batal
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date().getTime());
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
   
   // State untuk Modal Rekam Medis
   const [showModal, setShowModal] = useState(false);
@@ -115,22 +124,38 @@ export default function KelolaAntrean() {
                       <button onClick={() => handleUpdateStatus(antrean.id_antrian, "dipanggil")} className={styles.button} style={{ backgroundColor: '#3182ce' }}>Panggil</button>
                     )}
                     {antrean.status === "dipanggil" && (
-                      <>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <button onClick={() => handleOpenModal(antrean)} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Selesai</button>
-                        {antrean.waktu_dipanggil && (new Date().getTime() - new Date(antrean.waktu_dipanggil).getTime()) / 60000 >= 5 && (
-                          <button 
-                            onClick={() => {
-                              if (confirm("Pasien tidak hadir setelah 5 menit dipanggil. Batalkan antrian ini?")) {
-                                handleUpdateStatus(antrean.id_antrian, "dibatalkan");
-                              }
-                            }} 
-                            className={styles.button} 
-                            style={{ backgroundColor: '#e53e3e' }}
-                          >
-                            Batal (Tidak Hadir)
-                          </button>
+                        
+                        {antrean.waktu_dipanggil && (
+                          (() => {
+                            const callTime = new Date(antrean.waktu_dipanggil).getTime();
+                            const diffMinutes = (now - callTime) / 60000;
+                            
+                            if (diffMinutes >= 5) {
+                              return (
+                                <button 
+                                  onClick={() => {
+                                    if (confirm("Pasien tidak hadir setelah >5 menit dipanggil. Batalkan antrian ini?")) {
+                                      handleUpdateStatus(antrean.id_antrian, "dibatalkan");
+                                    }
+                                  }} 
+                                  className={styles.button} 
+                                  style={{ backgroundColor: '#e53e3e' }}
+                                >
+                                  Batal (Tidak Hadir)
+                                </button>
+                              );
+                            } else {
+                              return (
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                  Tunggu {Math.ceil(5 - diffMinutes)}m untuk opsi Batal
+                                </span>
+                              );
+                            }
+                          })()
                         )}
-                      </>
+                      </div>
                     )}
                     {antrean.status === "selesai" && (
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 600 }}>Telah Selesai</span>
