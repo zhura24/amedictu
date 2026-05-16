@@ -74,7 +74,13 @@ export async function POST(req: NextRequest) {
 
       await conn.query(
         "INSERT INTO antrian (nomor_antrian, poli, tanggal, keluhan, status, waktu_daftar, estimasi_tunggu, id_pasien) VALUES (?, ?, ?, ?, 'menunggu', NOW(), ?, ?)",
-        [nomor_baru, poli, tanggal, keluhan || null, estimasi, session!.user.id_pasien]
+        [nomor_baru, poli, tanggal, keluhan || null, estimasi, session!.user.id_user]
+      );
+
+      // Simpan notifikasi ke database
+      await conn.query(
+        "INSERT INTO notifikasi (id_user, pesan, jenis, createdAt) VALUES (?, ?, 'antrian_dibuat', NOW())",
+        [session!.user.id_user, `Antrian #${nomor_baru} di ${poli} berhasil dibuat untuk tanggal ${tanggal}.`]
       );
 
       return apiSuccess({ nomor_antrian: nomor_baru, poli, estimasi_tunggu_menit: estimasi }, `Nomor antrian ${nomor_baru} berhasil diambil!`, 201);

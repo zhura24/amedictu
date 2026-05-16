@@ -13,6 +13,7 @@ interface Antrean {
   keluhan: string;
   status: StatusAntrian;
   nama_poli: string;
+  waktu_dipanggil: string | null;
 }
 
 export default function KelolaAntrean() {
@@ -114,7 +115,22 @@ export default function KelolaAntrean() {
                       <button onClick={() => handleUpdateStatus(antrean.id_antrian, "dipanggil")} className={styles.button} style={{ backgroundColor: '#3182ce' }}>Panggil</button>
                     )}
                     {antrean.status === "dipanggil" && (
-                      <button onClick={() => handleOpenModal(antrean)} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Selesai</button>
+                      <>
+                        <button onClick={() => handleOpenModal(antrean)} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Selesai</button>
+                        {antrean.waktu_dipanggil && (new Date().getTime() - new Date(antrean.waktu_dipanggil).getTime()) / 60000 >= 5 && (
+                          <button 
+                            onClick={() => {
+                              if (confirm("Pasien tidak hadir setelah 5 menit dipanggil. Batalkan antrian ini?")) {
+                                handleUpdateStatus(antrean.id_antrian, "dibatalkan");
+                              }
+                            }} 
+                            className={styles.button} 
+                            style={{ backgroundColor: '#e53e3e' }}
+                          >
+                            Batal (Tidak Hadir)
+                          </button>
+                        )}
+                      </>
                     )}
                     {antrean.status === "selesai" && (
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 600 }}>Telah Selesai</span>
@@ -130,7 +146,21 @@ export default function KelolaAntrean() {
       {/* MODAL INPUT REKAM MEDIS */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-          <div className={styles.card} style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className={styles.card} style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+            <button 
+              onClick={() => setShowModal(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+            >
+              &times;
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+               <button 
+                 onClick={() => setShowModal(false)} 
+                 style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center' }}
+               >
+                 &larr; Kembali
+               </button>
+            </div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>Input Hasil Pemeriksaan</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
               Pasien: <strong>{selectedAntrean?.nama_depan} {selectedAntrean?.nama_belakang}</strong>

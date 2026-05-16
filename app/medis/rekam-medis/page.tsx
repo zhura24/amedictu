@@ -91,7 +91,14 @@ export default function RekamMedisPage() {
           )}
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <button 
+            onClick={() => setSelectedPatient(null)} 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', width: 'fit-content' }}
+          >
+            &larr; Kembali ke Daftar Pasien
+          </button>
+          <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
           
           {/* LEFT COLUMN */}
           <div style={{ width: '350px', display: 'flex', flexDirection: 'column', gap: '1.5rem', flexShrink: 0 }}>
@@ -170,6 +177,7 @@ export default function RekamMedisPage() {
             )}
           </div>
 
+          </div>
         </div>
       )}
     </div>

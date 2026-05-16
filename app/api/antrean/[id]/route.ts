@@ -23,10 +23,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       await conn.beginTransaction();
 
       // Update status antrian
-      await conn.query(
-        "UPDATE antrian SET status = ? WHERE id_antrian = ?",
-        [status, id]
-      );
+      if (status === "dipanggil") {
+        await conn.query(
+          "UPDATE antrian SET status = ?, waktu_dipanggil = NOW() WHERE id_antrian = ?",
+          [status, id]
+        );
+      } else {
+        await conn.query(
+          "UPDATE antrian SET status = ? WHERE id_antrian = ?",
+          [status, id]
+        );
+      }
 
       // Jika selesai dan ada data rekam medis, simpan ke tabel rekam_medis
       if (status === "selesai" && rekam_medis) {

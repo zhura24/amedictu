@@ -67,6 +67,7 @@ model Antrian {
   keluhan         String?       @db.Text
   status          StatusAntrian @default(menunggu)
   waktu_daftar    DateTime      @default(now())
+  waktu_dipanggil DateTime?
   estimasi_tunggu Int?
   id_pasien       Int
   id_poli         Int

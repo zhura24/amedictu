@@ -51,10 +51,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const conn = await pool.getConnection();
     try {
-      const [rows] = await conn.query<any[]>("SELECT * FROM antrian WHERE id_antrian = ?", [id]);
+      const [rows] = await conn.query<any[]>(
+        "SELECT a.*, p.id_user FROM antrian a JOIN pasien p ON a.id_pasien = p.id_pasien WHERE a.id_antrian = ?", 
+        [id]
+      );
       if (!rows[0]) return apiError("Antrian tidak ditemukan", 404);
 
-      await conn.query("UPDATE antrian SET status = ? WHERE id_antrian = ?", [status, id]);
+      if (status === "dipanggil") {
+        await conn.query("UPDATE antrian SET status = ?, waktu_dipanggil = NOW() WHERE id_antrian = ?", [status, id]);
+      } else {
+        await conn.query("UPDATE antrian SET status = ? WHERE id_antrian = ?", [status, id]);
+      }
+
+      // Simpan notifikasi ke database
+      const jenisNotif = `antrian_${status}`;
+      await conn.query(
+        "INSERT INTO notifikasi (id_user, pesan, jenis, createdAt) VALUES (?, ?, ?, NOW())",
+        [rows[0].id_user, pesanNotif[status] || "", jenisNotif]
+      );
 
       // Trigger Pusher real-time notification
       await pusherServer.trigger(
