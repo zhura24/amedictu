@@ -29,6 +29,9 @@ export async function GET(req: NextRequest) {
       } else if (session.user.role === "pasien") {
         query += " WHERE a.id_pasien = ?";
         params.push(session.user.id_pasien);
+      } else if (session.user.role === "tenaga_medis" && session.user.id_poli) {
+        query += " WHERE a.id_poli = ?";
+        params.push(session.user.id_poli);
       }
 
       query += " ORDER BY a.tanggal DESC, a.nomor_antrian ASC";

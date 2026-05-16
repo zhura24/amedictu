@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
             username: user.username,
             role: user.role,
             id_pasien: user.id_pasien ?? null,
+            id_poli: user.id_poli ?? null,
             nama: user.nama_depan
               ? `${user.nama_depan} ${user.nama_belakang}`
               : user.username,
@@ -66,6 +67,7 @@ export const authOptions: NextAuthOptions = {
         token.username = (user as any).username;
         token.role = (user as any).role;
         token.id_pasien = (user as any).id_pasien;
+        token.id_poli = (user as any).id_poli;
         token.nama = (user as any).nama;
       }
       return token;
@@ -75,6 +77,7 @@ export const authOptions: NextAuthOptions = {
       session.user.username = token.username as string;
       session.user.role = token.role as string;
       session.user.id_pasien = token.id_pasien as number | null;
+      session.user.id_poli = token.id_poli as number | null;
       session.user.nama = token.nama as string;
       return session;
     },

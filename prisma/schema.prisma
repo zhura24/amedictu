@@ -21,6 +21,9 @@ model User {
   pasien     Pasien?
   notifikasi Notifikasi[]
 
+  id_poli Int?
+  poli    Poli? @relation(fields: [id_poli], references: [id_poli])
+
   @@map("users")
 }
 
@@ -81,6 +84,7 @@ model Poli {
   createdAt  DateTime   @default(now())
 
   antrian    Antrian[]
+  users      User[]
 
   @@map("poli")
 }
