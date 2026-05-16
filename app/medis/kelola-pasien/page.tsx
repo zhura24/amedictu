@@ -5,35 +5,60 @@ import styles from "../../../components/UI.module.css";
 
 export default function KelolaPasien() {
   const [pasienList, setPasienList] = useState<any[]>([]);
-  const [isClient, setIsClient] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    setIsClient(true);
-    const saved = localStorage.getItem('antreanList');
-    if (saved) {
-      setPasienList(JSON.parse(saved));
+  const fetchPasien = async () => {
+    try {
+      const res = await fetch("/api/admin/pasien");
+      const data = await res.json();
+      if (data.success) {
+        setPasienList(data.data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat data pasien");
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
-  const handleSave = (id: string) => {
-    setEditingId(null);
-    localStorage.setItem('antreanList', JSON.stringify(pasienList));
-    alert("Data pasien berhasil diperbarui!");
   };
 
-  const handleChange = (id: string, field: string, value: string) => {
+  useEffect(() => {
+    fetchPasien();
+  }, []);
+
+  const handleSave = async (id: number) => {
+    const pasien = pasienList.find(p => p.id === id);
+    try {
+      const res = await fetch("/api/admin/pasien", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pasien)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingId(null);
+        alert("Data pasien berhasil diperbarui!");
+        fetchPasien();
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      alert("Gagal memperbarui data");
+    }
+  };
+
+  const handleChange = (id: number, field: string, value: string) => {
     setPasienList(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
-  if (!isClient) return null;
+  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Memuat data pasien...</div>;
 
   return (
     <div style={{ backgroundColor: '#f3f4f6', minHeight: '100%', padding: '1.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.25rem' }}>Kelola Data Pasien</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Lihat dan perbarui data diri pasien.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Lihat dan perbarui data diri pasien dari database.</p>
         </div>
       </div>
 
@@ -93,7 +118,7 @@ export default function KelolaPasien() {
             })}
             {pasienList.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Belum ada data pasien.</td>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Belum ada data pasien di database.</td>
               </tr>
             )}
           </tbody>
@@ -102,3 +127,4 @@ export default function KelolaPasien() {
     </div>
   );
 }
+

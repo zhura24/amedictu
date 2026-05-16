@@ -5,76 +5,79 @@ import styles from "../../../components/UI.module.css";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ totalPasien: 1245, tenagaMedis: 12, kunjunganHariIni: 84 });
-  const [isClient, setIsClient] = useState(false);
+  const [stats, setStats] = useState({ totalPasien: 0, tenagaMedis: 0, kunjunganHariIni: 0 });
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/admin/stats");
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat statistik");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setIsClient(true);
-    
-    // Count Kunjungan & Pasien
-    const savedAntrean = localStorage.getItem('antreanList');
-    if (savedAntrean) {
-      const parsed = JSON.parse(savedAntrean);
-      setStats(prev => ({ ...prev, kunjunganHariIni: parsed.length, totalPasien: parsed.length }));
-    } else {
-      setStats(prev => ({ ...prev, kunjunganHariIni: 3, totalPasien: 3 }));
-    }
-
-    // Count Tenaga Medis
-    const savedDokter = localStorage.getItem('jadwalDokter');
-    if (savedDokter) {
-      const parsedDokter = JSON.parse(savedDokter);
-      setStats(prev => ({ ...prev, tenagaMedis: parsedDokter.length }));
-    } else {
-      setStats(prev => ({ ...prev, tenagaMedis: 6 })); // Default is 6
-    }
+    fetchStats();
   }, []);
 
-  if (!isClient) return null;
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Memuat statistik sistem...</div>;
 
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Dashboard Admin</h1>
-        <p className={styles.subtitle}>Ringkasan operasional dan statistik klinik AMEDICTU.</p>
+        <h1 className={styles.title} style={{ color: '#1e293b' }}>Control Center</h1>
+        <p className={styles.subtitle}>Ringkasan operasional dan statistik klinik AMEDICTU secara real-time.</p>
       </div>
 
-      <div className={styles.grid}>
-        <div className={styles.card}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '3rem' }}>
+        <div className={styles.card} style={{ borderLeft: '4px solid #4f46e5' }}>
           <div className={styles.cardHeader}>
             <h3 className={styles.cardTitle}>Total Pasien Terdaftar</h3>
           </div>
-          <div className={styles.statValue}>{stats.totalPasien}</div>
+          <div className={styles.statValue} style={{ color: '#4f46e5' }}>{stats.totalPasien}</div>
         </div>
 
-        <div className={styles.card}>
+        <div className={styles.card} style={{ borderLeft: '4px solid #0d9488' }}>
           <div className={styles.cardHeader}>
             <h3 className={styles.cardTitle}>Tenaga Medis Aktif</h3>
           </div>
-          <div className={styles.statValue}>{stats.tenagaMedis}</div>
+          <div className={styles.statValue} style={{ color: '#0d9488' }}>{stats.tenagaMedis}</div>
         </div>
 
-        <div className={styles.card}>
+        <div className={styles.card} style={{ borderLeft: '4px solid #f59e0b' }}>
           <div className={styles.cardHeader}>
             <h3 className={styles.cardTitle}>Kunjungan Hari Ini</h3>
-            <span className={`${styles.badge} ${styles.badgeAktif}`}>Live</span>
+            <span className={styles.badge} style={{ backgroundColor: '#fef3c7', color: '#92400e' }}>Live</span>
           </div>
-          <div className={styles.statValue}>{stats.kunjunganHariIni}</div>
+          <div className={styles.statValue} style={{ color: '#f59e0b' }}>{stats.kunjunganHariIni}</div>
         </div>
       </div>
 
-      <div className={styles.header} style={{ marginTop: '3rem', marginBottom: '1.5rem' }}>
-        <h2 className={styles.title} style={{ fontSize: '1.5rem' }}>Aksi Admin</h2>
-      </div>
-
-      <div style={{ display: 'flex', gap: '1rem' }}>
-        <Link href="/admin/laporan">
-          <button className={styles.button}>Lihat Laporan Lengkap</button>
-        </Link>
-        <Link href="/admin/jadwal-dokter">
-          <button className={`${styles.button} ${styles.buttonOutline}`}>Kelola Jadwal Dokter</button>
-        </Link>
+      <div className={styles.card} style={{ backgroundColor: '#1e293b', color: 'white', padding: '2rem' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Manajemen Sistem</h2>
+        <p style={{ opacity: 0.8, marginBottom: '2rem', fontSize: '0.9rem' }}>
+          Gunakan pintasan di bawah untuk mengelola data operasional klinik dengan cepat.
+        </p>
+        
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <Link href="/admin/laporan">
+            <button className={styles.button} style={{ backgroundColor: 'white', color: '#1e293b' }}>Buka Laporan</button>
+          </Link>
+          <Link href="/admin/kelola-medis">
+            <button className={styles.button} style={{ backgroundColor: 'transparent', border: '1px solid white', color: 'white' }}>Kelola Akun Medis</button>
+          </Link>
+          <Link href="/admin/jadwal-dokter">
+            <button className={styles.button} style={{ backgroundColor: 'transparent', border: '1px solid white', color: 'white' }}>Update Jadwal</button>
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
+
