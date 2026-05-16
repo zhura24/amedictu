@@ -14,13 +14,16 @@ export async function GET() {
 
   const conn = await pool.getConnection();
   try {
+    // Bersihkan data lama agar tidak dobel
+    await conn.query("DELETE FROM jadwal_dokter");
+
     for (const doc of defaultDoctors) {
       await conn.query(
         "INSERT INTO jadwal_dokter (nama_dokter, spesialis, hari, jam_mulai, jam_selesai, updatedAt) VALUES (?, ?, ?, ?, ?, NOW())",
         doc
       );
     }
-    return NextResponse.json({ success: true, message: "Seeding complete" });
+    return NextResponse.json({ success: true, message: "Cleanup and Seeding complete" });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message });
   } finally {
