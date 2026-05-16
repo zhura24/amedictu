@@ -69,7 +69,7 @@ export default function RekamMedisPage() {
                   {patients.map((p, idx) => (
                     <tr key={p.id_pasien}>
                       <td><strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>{p.no_rekam_medis}</strong></td>
-                      <td>{p.nama_depan} {p.nama_belakang}</td>
+                      <td>{p.nama_depan ? `${p.nama_depan} ${p.nama_belakang}` : p.nama}</td>
                       <td>{p.nik}</td>
                       <td>
                         <button 
@@ -104,10 +104,13 @@ export default function RekamMedisPage() {
               <div style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                   <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.25rem' }}>
-                    {selectedPatient.nama_depan.substring(0, 1).toUpperCase()}{selectedPatient.nama_belakang.substring(0, 1).toUpperCase()}
+                    {(selectedPatient.nama_depan?.[0] || selectedPatient.nama?.[0] || '?').toUpperCase()}
+                    {(selectedPatient.nama_belakang?.[0] || '').toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '1rem' }}>{selectedPatient.nama_depan} {selectedPatient.nama_belakang}</h3>
+                    <h3 style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '1rem' }}>
+                      {selectedPatient.nama_depan ? `${selectedPatient.nama_depan} ${selectedPatient.nama_belakang}` : selectedPatient.nama}
+                    </h3>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No. RM: <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{selectedPatient.no_rekam_medis}</span></p>
                   </div>
                 </div>

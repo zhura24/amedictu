@@ -17,8 +17,12 @@ export async function GET(req: NextRequest) {
     // Format data agar sesuai dengan UI
     const formatted = rows.map(p => ({
       id: p.id_pasien,
+      id_pasien: p.id_pasien,
       no_rekam_medis: p.no_rekam_medis,
       nama: `${p.nama_depan} ${p.nama_belakang}`,
+      nama_depan: p.nama_depan,
+      nama_belakang: p.nama_belakang,
+      nik: p.nik,
       jenis_kelamin: p.jenis_kelamin === 'laki_laki' ? 'Laki-laki' : 'Perempuan',
       tgl_lahir: p.tgl_lahir ? new Date(p.tgl_lahir).toLocaleDateString('id-ID') : "-",
       no_telp: p.no_telp || "-",
