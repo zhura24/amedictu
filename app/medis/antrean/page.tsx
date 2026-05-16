@@ -42,7 +42,14 @@ export default function KelolaAntrean() {
     try {
       const res = await fetch("/api/antrean");
       const data = await res.json();
-      if (data.success) setAntreanList(data.data);
+      if (data.success) {
+        // Urutkan: dipanggil (1), menunggu (2), selesai/dibatalkan (3)
+        const sorted = data.data.sort((a: Antrean, b: Antrean) => {
+          const priority: Record<string, number> = { dipanggil: 1, menunggu: 2, selesai: 3, dibatalkan: 3 };
+          return priority[a.status] - priority[b.status];
+        });
+        setAntreanList(sorted);
+      }
     } catch (err) {
       console.error("Gagal memuat antrean");
     } finally {
@@ -82,7 +89,7 @@ export default function KelolaAntrean() {
   const getStatusBadge = (status: StatusAntrian) => {
     switch(status) {
       case "menunggu": return <span className={`${styles.badge} ${styles.badgeMenunggu}`}>Menunggu</span>;
-      case "dipanggil": return <span className={`${styles.badge}`} style={{ backgroundColor: '#bee3f8', color: '#2b6cb0' }}>Sedang Diperiksa</span>;
+      case "dipanggil": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba' }}>Pasien Dipanggil</span>;
       case "selesai": return <span className={`${styles.badge} ${styles.badgeAktif}`}>Selesai</span>;
       case "dibatalkan": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fed7d7', color: '#c53030' }}>Dibatalkan</span>;
       default: return null;
