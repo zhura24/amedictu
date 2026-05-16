@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "../../../components/UI.module.css";
 
-type StatusAntrian = "menunggu" | "dipanggil" | "selesai" | "dibatalkan";
+type StatusAntrian = "menunggu" | "dipanggil" | "diperiksa" | "selesai" | "dibatalkan";
 
 interface Antrean {
   id_antrian: number;
@@ -43,9 +43,8 @@ export default function KelolaAntrean() {
       const res = await fetch("/api/antrean");
       const data = await res.json();
       if (data.success) {
-        // Urutkan: dipanggil (1), menunggu (2), selesai/dibatalkan (3)
         const sorted = data.data.sort((a: Antrean, b: Antrean) => {
-          const priority: Record<string, number> = { dipanggil: 1, menunggu: 2, selesai: 3, dibatalkan: 3 };
+          const priority: any = { diperiksa: 1, dipanggil: 2, menunggu: 3, selesai: 4, dibatalkan: 5 };
           return priority[a.status] - priority[b.status];
         });
         setAntreanList(sorted);
@@ -90,6 +89,7 @@ export default function KelolaAntrean() {
     switch(status) {
       case "menunggu": return <span className={`${styles.badge} ${styles.badgeMenunggu}`}>Menunggu</span>;
       case "dipanggil": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba' }}>Pasien Dipanggil</span>;
+      case "diperiksa": return <span className={`${styles.badge}`} style={{ backgroundColor: '#c6f6d5', color: '#22543d', border: '1px solid #9ae6b4' }}>Sedang Diperiksa</span>;
       case "selesai": return <span className={`${styles.badge} ${styles.badgeAktif}`}>Selesai</span>;
       case "dibatalkan": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fed7d7', color: '#c53030' }}>Dibatalkan</span>;
       default: return null;
@@ -132,7 +132,7 @@ export default function KelolaAntrean() {
                     )}
                     {antrean.status === "dipanggil" && (
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <button onClick={() => handleOpenModal(antrean)} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Selesai</button>
+                        <button onClick={() => handleUpdateStatus(antrean.id_antrian, "diperiksa")} className={styles.button} style={{ backgroundColor: 'var(--primary)' }}>Pasien Datang</button>
                         
                         {antrean.status === "dipanggil" && (
                           (() => {
@@ -176,6 +176,9 @@ export default function KelolaAntrean() {
                           })()
                         )}
                       </div>
+                    )}
+                    {antrean.status === "diperiksa" && (
+                      <button onClick={() => handleOpenModal(antrean)} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Input Rekam Medis</button>
                     )}
                     {antrean.status === "selesai" && (
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 600 }}>Telah Selesai</span>

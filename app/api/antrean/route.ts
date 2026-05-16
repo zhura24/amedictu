@@ -92,6 +92,39 @@ export async function POST(req: NextRequest) {
     });
 
 
+    // 3. Notifikasi untuk Dokter di poli tersebut
+    try {
+        const doctors = await prisma.user.findMany({
+            where: { id_poli: parseInt(id_poli), role: 'tenaga_medis' }
+        });
+        
+        const Pusher = require("pusher");
+        const pusher = new Pusher({
+          appId: process.env.PUSHER_APP_ID,
+          key: process.env.PUSHER_KEY,
+          secret: process.env.PUSHER_SECRET,
+          cluster: process.env.PUSHER_CLUSTER,
+          useTLS: true,
+        });
+
+        for (const doc of doctors) {
+            await prisma.notifikasi.create({
+                data: {
+                    id_user: doc.id_user,
+                    pesan: `Pasien baru telah mendaftar di poli Anda. No. Antrian: A-${String(nextNo).padStart(3, '0')}`,
+                    jenis: 'info'
+                }
+            });
+
+            // Trigger Pusher untuk dokter
+            await pusher.trigger(`antrian-${doc.id_user}`, "status-update", {
+                pesan: `Pasien baru: A-${String(nextNo).padStart(3, '0')}`,
+            });
+        }
+    } catch (err) {
+        console.error("Gagal mengirim notif ke dokter:", err);
+    }
+
     return apiSuccess({ id_antrian: newAntrian.id_antrian, nomor_antrian: nextNo }, "Antrean berhasil diambil");
   });
 }

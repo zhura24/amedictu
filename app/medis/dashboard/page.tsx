@@ -5,7 +5,7 @@ import styles from "../../../components/UI.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type StatusAntrian = "menunggu" | "dipanggil" | "selesai" | "dibatalkan";
+type StatusAntrian = "menunggu" | "dipanggil" | "diperiksa" | "selesai" | "dibatalkan";
 
 interface Antrean {
   id_antrian: number;
@@ -35,9 +35,9 @@ export default function MedisDashboard() {
       const res = await fetch("/api/antrean");
       const data = await res.json();
       if (data.success) {
-        // Urutkan: dipanggil di paling atas
+        // Urutkan: diperiksa (1), dipanggil (2), menunggu (3), selesai/dibatalkan (4)
         const sorted = data.data.sort((a: Antrean, b: Antrean) => {
-          const priority: any = { dipanggil: 1, menunggu: 2, selesai: 3, dibatalkan: 4 };
+          const priority: any = { diperiksa: 1, dipanggil: 2, menunggu: 3, selesai: 4, dibatalkan: 5 };
           return priority[a.status] - priority[b.status];
         });
         setAntreanList(sorted);
@@ -78,6 +78,7 @@ export default function MedisDashboard() {
     switch(status) {
       case "menunggu": return <span className={`${styles.badge} ${styles.badgeMenunggu}`}>Menunggu</span>;
       case "dipanggil": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba' }}>Pasien Dipanggil</span>;
+      case "diperiksa": return <span className={`${styles.badge}`} style={{ backgroundColor: '#c6f6d5', color: '#22543d', border: '1px solid #9ae6b4' }}>Sedang Diperiksa</span>;
       case "selesai": return <span className={`${styles.badge} ${styles.badgeAktif}`}>Selesai</span>;
       case "dibatalkan": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fed7d7', color: '#c53030' }}>Dibatalkan</span>;
       default: return null;
@@ -140,7 +141,7 @@ export default function MedisDashboard() {
           </thead>
           <tbody>
             {antreanList
-              .filter(a => a.status === 'menunggu' || a.status === 'dipanggil') // Tampilkan yang aktif saja
+              .filter(a => ['menunggu', 'dipanggil', 'diperiksa'].includes(a.status)) // Tampilkan yang aktif saja
               .map((antrean) => (
               <tr key={antrean.id_antrian}>
                 <td><strong style={{ color: 'var(--primary)', fontSize: '1.2rem' }}>A-{String(antrean.nomor_antrian).padStart(3, '0')}</strong></td>
@@ -155,7 +156,7 @@ export default function MedisDashboard() {
                     )}
                     {antrean.status === 'dipanggil' && (
                       <>
-                        <button onClick={() => router.push('/medis/antrean')} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Input Rekam Medis</button>
+                        <button onClick={() => handleUpdateStatus(antrean.id_antrian, "diperiksa")} className={styles.button} style={{ backgroundColor: 'var(--primary)' }}>Pasien Datang</button>
                         
                         {(() => {
                           if (!antrean.waktu_dipanggil) return (
@@ -167,9 +168,12 @@ export default function MedisDashboard() {
                               <button onClick={() => handleUpdateStatus(antrean.id_antrian, "dibatalkan")} className={styles.button} style={{ backgroundColor: '#e53e3e' }}>Batal (Tidak Hadir)</button>
                             );
                           }
-                          return <span style={{ fontSize: '0.7rem', color: '#856404', fontStyle: 'italic', backgroundColor: '#fff3cd', padding: '2px 8px', borderRadius: '4px' }}>Batal dalam {Math.ceil(5 - diff)}m</span>;
+                          return <span style={{ fontSize: '0.7rem', color: '#856404', fontStyle: 'italic', backgroundColor: '#fff3cd', padding: '2px 8px', borderRadius: '4px' }}>Bisa batal {Math.ceil(5 - diff)}m lagi</span>;
                         })()}
                       </>
+                    )}
+                    {antrean.status === 'diperiksa' && (
+                      <button onClick={() => router.push('/medis/antrean')} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Input Rekam Medis</button>
                     )}
                   </div>
                 </td>

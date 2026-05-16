@@ -155,6 +155,7 @@ enum StatusPoli {
 enum StatusAntrian {
   menunggu
   dipanggil
+  diperiksa
   selesai
   dibatalkan
 }

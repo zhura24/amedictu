@@ -14,7 +14,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json();
     const { status, rekam_medis } = body;
 
-    if (!["menunggu", "dipanggil", "selesai", "dibatalkan"].includes(status)) {
+    if (!["menunggu", "dipanggil", "diperiksa", "selesai", "dibatalkan"].includes(status)) {
       return apiError("Status tidak valid");
     }
 
@@ -72,6 +72,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (antrianRow.length > 0) {
           const pesanNotif: Record<string, string> = {
             dipanggil: "Nomor antrian Anda sedang dipanggil! Segera menuju loket.",
+            diperiksa: "Anda sedang diperiksa oleh dokter.",
             selesai: "Antrian Anda telah selesai. Terima kasih sudah berkunjung.",
             dibatalkan: "Antrian Anda telah dibatalkan.",
           };
