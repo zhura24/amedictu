@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import styles from "../../login/page.module.css";
+import styles from "./medis-login.module.css";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
@@ -24,16 +24,16 @@ export default function MedisLoginPage() {
         redirect: false,
         username,
         password,
-        role: "tenaga_medis" // Kunci agar hanya tenaga medis yang bisa login di sini
+        role: "tenaga_medis"
       });
 
       if (result?.error) {
-        setError("Username atau kata sandi salah!");
+        setError("Username atau password petugas salah!");
       } else {
         router.push("/medis/dashboard");
       }
     } catch (err) {
-      setError("Terjadi kesalahan sistem.");
+      setError("Terjadi kesalahan koneksi.");
     } finally {
       setIsLoading(false);
     }
@@ -41,30 +41,30 @@ export default function MedisLoginPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.leftPanel} style={{ backgroundColor: '#f0fdfa' }}>
+      <div className={styles.leftPanel}>
         <div className={styles.formWrapper}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: '8px', height: '24px', backgroundColor: '#0d9488', borderRadius: '4px' }}></div>
-            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: '#0d9488', fontSize: '0.75rem' }}>PORTAL TENAGA MEDIS</span>
+            <div style={{ width: '12px', height: '32px', backgroundColor: '#0d9488', borderRadius: '4px' }}></div>
+            <span style={{ fontWeight: 800, letterSpacing: '0.15em', color: '#0d9488', fontSize: '0.85rem' }}>PORTAL MEDIS TERPADU</span>
           </div>
 
-          <h2 className={styles.title}>Login Petugas</h2>
-          <p className={styles.subtitle}>Silakan masuk ke portal medis terpadu</p>
+          <h2 className={styles.title}>Masuk Petugas</h2>
+          <p className={styles.subtitle}>Gunakan akun tenaga medis Anda untuk mengakses sistem.</p>
           
           {error && (
-            <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid #f87171' }}>
+            <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 600, border: '1px solid #f87171' }}>
               {error}
             </div>
           )}
           
           <form onSubmit={handleLogin}>
             <div className={styles.formGroup}>
-              <label htmlFor="username" className={styles.label}>USERNAME PETUGAS</label>
+              <label htmlFor="username" className={styles.label}>ID PETUGAS / USERNAME</label>
               <input 
                 type="text" 
                 id="username" 
                 className={styles.input} 
-                placeholder="dr.sari" 
+                placeholder="Masukkan username dokter" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -72,7 +72,7 @@ export default function MedisLoginPage() {
             </div>
             
             <div className={styles.formGroup}>
-              <label htmlFor="password" className={styles.label}>PASSWORD</label>
+              <label htmlFor="password" className={styles.label}>PASSWORD PETUGAS</label>
               <div className={styles.passwordField}>
                 <input 
                   type={showPassword ? "text" : "password"} 
@@ -99,26 +99,33 @@ export default function MedisLoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button} style={{ backgroundColor: '#0d9488' }} disabled={isLoading}>
-              {isLoading ? "Memverifikasi..." : "Masuk Petugas"}
+            <button type="submit" className={styles.button} disabled={isLoading}>
+              {isLoading ? "Memverifikasi Akun..." : "MASUK KE PORTAL MEDIS"}
             </button>
           </form>
           
-          <p className={styles.linkText} style={{ marginTop: '2rem' }}>
-            <Link href="/" className={styles.link} style={{ color: '#0d9488' }}>&larr; Kembali ke Beranda</Link>
+          <p className={styles.linkText}>
+            Bukan tenaga medis? <Link href="/login" className={styles.link}>Login Pasien di sini</Link>
+          </p>
+
+          <p className={styles.linkText} style={{ marginTop: '1rem' }}>
+            <Link href="/" className={styles.link} style={{ color: '#64748b', fontSize: '0.8rem' }}>&larr; Kembali ke Beranda</Link>
           </p>
         </div>
       </div>
       
-      <div className={styles.rightPanel} style={{ background: 'linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%)' }}>
-        <svg className={styles.logoIcon} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-        </svg>
-        <h1 className={styles.logo}>AMEDICTU</h1>
-        <p className={styles.welcomeText}>
-          Portal Tenaga Medis untuk manajemen antrean dan rekam medis terpadu.
-        </p>
+      <div className={styles.rightPanel}>
+        <div style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: '2rem', borderRadius: '1.5rem', backdropFilter: 'blur(10px)' }}>
+          <svg className={styles.logoIcon} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <h1 className={styles.logo}>AMEDICTU MEDICAL</h1>
+          <p className={styles.welcomeText}>
+            Sistem manajemen antrean dan rekam medis digital khusus tenaga kesehatan profesional.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+
