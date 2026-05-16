@@ -21,8 +21,9 @@ export default function PasienDashboard() {
         if (dataMy.success && dataMy.data.length > 0) {
           // Cari antrean yang masih menunggu atau dipanggil
           const active = dataMy.data.find((a: any) => a.status === "menunggu" || a.status === "dipanggil");
-          setMyAntrean(active || dataMy.data[0]); // Ambil yang aktif atau yang terbaru
+          setMyAntrean(active || null); // Hanya tampilkan jika sedang aktif
         }
+
 
         // 2. Ambil status global (siapa yang dipanggil)
         const resGlobal = await fetch("/api/antrean"); // Sementara pakai endpoint yang sama
