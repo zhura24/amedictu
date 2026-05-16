@@ -15,19 +15,32 @@ interface Antrean {
   keluhan: string;
   status: StatusAntrian;
   nama_poli: string;
+  waktu_dipanggil: string | null;
 }
 
 export default function MedisDashboard() {
   const [antreanList, setAntreanList] = useState<Antrean[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [now, setNow] = useState(new Date().getTime());
   const router = useRouter();
+
+  // Timer untuk update UI tombol Batal secara real-time
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date().getTime()), 10000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchAntrean = async () => {
     try {
       const res = await fetch("/api/antrean");
       const data = await res.json();
       if (data.success) {
-        setAntreanList(data.data);
+        // Urutkan: dipanggil di paling atas
+        const sorted = data.data.sort((a: Antrean, b: Antrean) => {
+          const priority: any = { dipanggil: 1, menunggu: 2, selesai: 3, dibatalkan: 4 };
+          return priority[a.status] - priority[b.status];
+        });
+        setAntreanList(sorted);
       }
     } catch (err) {
       console.error("Gagal memuat antrean");
@@ -64,7 +77,7 @@ export default function MedisDashboard() {
   const getStatusBadge = (status: StatusAntrian) => {
     switch(status) {
       case "menunggu": return <span className={`${styles.badge} ${styles.badgeMenunggu}`}>Menunggu</span>;
-      case "dipanggil": return <span className={`${styles.badge}`} style={{ backgroundColor: '#bee3f8', color: '#2b6cb0' }}>Sedang Diperiksa</span>;
+      case "dipanggil": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba' }}>Pasien Dipanggil</span>;
       case "selesai": return <span className={`${styles.badge} ${styles.badgeAktif}`}>Selesai</span>;
       case "dibatalkan": return <span className={`${styles.badge}`} style={{ backgroundColor: '#fed7d7', color: '#c53030' }}>Dibatalkan</span>;
       default: return null;
@@ -126,23 +139,37 @@ export default function MedisDashboard() {
             </tr>
           </thead>
           <tbody>
-            {antreanList.map((antrean) => (
-              <tr key={antrean.id_antrian} style={{ opacity: antrean.status === 'selesai' ? 0.6 : 1 }}>
-                <td><strong style={{ color: antrean.status === 'selesai' ? 'var(--text-muted)' : 'var(--primary)', fontSize: '1.2rem' }}>A-{String(antrean.nomor_antrian).padStart(3, '0')}</strong></td>
+            {antreanList
+              .filter(a => a.status === 'menunggu' || a.status === 'dipanggil') // Tampilkan yang aktif saja
+              .map((antrean) => (
+              <tr key={antrean.id_antrian}>
+                <td><strong style={{ color: 'var(--primary)', fontSize: '1.2rem' }}>A-{String(antrean.nomor_antrian).padStart(3, '0')}</strong></td>
                 <td>{antrean.nama_depan} {antrean.nama_belakang}</td>
                 <td>{antrean.nama_poli}</td>
                 <td>{antrean.keluhan || "-"}</td>
                 <td>{getStatusBadge(antrean.status)}</td>
                 <td>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     {antrean.status === 'menunggu' && (
                       <button onClick={() => handleUpdateStatus(antrean.id_antrian, "dipanggil")} className={styles.button} style={{ backgroundColor: '#3182ce' }}>Panggil</button>
                     )}
                     {antrean.status === 'dipanggil' && (
-                      <button onClick={() => handleUpdateStatus(antrean.id_antrian, "selesai")} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Selesai</button>
-                    )}
-                    {antrean.status === 'selesai' && (
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Selesai diperiksa</span>
+                      <>
+                        <button onClick={() => router.push('/medis/antrean')} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Input Rekam Medis</button>
+                        
+                        {(() => {
+                          if (!antrean.waktu_dipanggil) return (
+                            <button onClick={() => handleUpdateStatus(antrean.id_antrian, "dibatalkan")} className={styles.button} style={{ backgroundColor: '#e53e3e' }}>Batal (Manual)</button>
+                          );
+                          const diff = (now - new Date(antrean.waktu_dipanggil).getTime()) / 60000;
+                          if (diff >= 5) {
+                            return (
+                              <button onClick={() => handleUpdateStatus(antrean.id_antrian, "dibatalkan")} className={styles.button} style={{ backgroundColor: '#e53e3e' }}>Batal (Tidak Hadir)</button>
+                            );
+                          }
+                          return <span style={{ fontSize: '0.7rem', color: '#856404', fontStyle: 'italic', backgroundColor: '#fff3cd', padding: '2px 8px', borderRadius: '4px' }}>Batal dalam {Math.ceil(5 - diff)}m</span>;
+                        })()}
+                      </>
                     )}
                   </div>
                 </td>
