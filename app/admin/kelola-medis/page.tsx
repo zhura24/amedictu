@@ -8,7 +8,7 @@ export default function KelolaMedisPage() {
   const [poliList, setPoliList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ username: "", password: "", id_poli: "" });
+  const [formData, setFormData] = useState({ username: "", password: "", id_poli: "", nama_lengkap: "" });
 
   const fetchData = async () => {
     try {
@@ -44,7 +44,7 @@ export default function KelolaMedisPage() {
       const data = await res.json();
       if (data.success) {
         alert("Akun dokter berhasil dibuat!");
-        setFormData({ username: "", password: "", id_poli: "" });
+        setFormData({ username: "", password: "", id_poli: "", nama_lengkap: "" });
         setShowForm(false);
         fetchData();
       } else {
@@ -74,7 +74,18 @@ export default function KelolaMedisPage() {
           <h2 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 700 }}>Registrasi Akun Medis</h2>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Username</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Nama Lengkap Dokter</label>
+              <input 
+                type="text" 
+                required 
+                placeholder="Contoh: dr. Sari Madani, Sp.A"
+                value={formData.nama_lengkap} 
+                onChange={e => setFormData({...formData, nama_lengkap: e.target.value})} 
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }} 
+              />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Username (ID Login)</label>
               <input 
                 type="text" 
                 required 
@@ -99,7 +110,7 @@ export default function KelolaMedisPage() {
               </select>
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Password</label>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Password Akun</label>
               <input 
                 type="password" 
                 required 
@@ -118,29 +129,32 @@ export default function KelolaMedisPage() {
         <table className={styles.table}>
           <thead>
             <tr>
+              <th>ID Petugas</th>
+              <th>Nama Lengkap</th>
               <th>Username</th>
-              <th>Unit Penugasan</th>
-              <th>Tanggal Dibuat</th>
+              <th>Poli</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {medisList.map((medis) => (
               <tr key={medis.id_user}>
-                <td style={{ fontWeight: 700 }}>{medis.username}</td>
+                <td><code style={{ backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>{medis.id_petugas}</code></td>
+                <td style={{ fontWeight: 700 }}>{medis.nama_lengkap || "-"}</td>
+                <td>{medis.username}</td>
                 <td><span className={styles.badge} style={{ backgroundColor: '#ebf8ff', color: '#2b6cb0' }}>{medis.nama_poli || "Umum"}</span></td>
-                <td>{new Date(medis.createdAt).toLocaleDateString('id-ID')}</td>
                 <td><span className={styles.badge} style={{ backgroundColor: '#c6f6d5', color: '#276749' }}>Aktif</span></td>
               </tr>
             ))}
             {medisList.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>Belum ada akun dokter yang dibuat.</td>
+                <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>Belum ada akun dokter yang dibuat.</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
 
     </div>
   );

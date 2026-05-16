@@ -8,16 +8,18 @@ datasource db {
 }
 
 model User {
-  id_user    Int          @id @default(autoincrement())
-  username   String       @unique @db.VarChar(100)
-  password   String       @db.VarChar(255)
-  role       Role         @default(pasien)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  id_poli    Int?
-  notifikasi Notifikasi[]
-  pasien     Pasien?
-  poli       Poli?        @relation(fields: [id_poli], references: [id_poli])
+  id_user      Int          @id @default(autoincrement())
+  username     String       @unique @db.VarChar(100)
+  nama_lengkap String?      @db.VarChar(150)
+  password     String       @db.VarChar(255)
+  role         Role         @default(pasien)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  id_poli      Int?
+  notifikasi   Notifikasi[]
+  pasien       Pasien?
+  poli         Poli?        @relation(fields: [id_poli], references: [id_poli])
+
 
   @@index([id_poli], map: "users_id_poli_fkey")
   @@map("users")

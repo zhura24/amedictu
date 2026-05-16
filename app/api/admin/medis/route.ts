@@ -11,19 +11,20 @@ export async function GET(req: NextRequest) {
     const { error } = await requireAuth(["admin"]);
     if (error) return error;
 
-    const conn = await pool.getConnection();
-    try {
-      const [rows] = await conn.query(
-        `SELECT u.id_user, u.username, u.role, u.createdAt, p.nama_poli 
-         FROM users u 
-         LEFT JOIN poli p ON u.id_poli = p.id_poli
-         WHERE u.role = 'tenaga_medis' 
-         ORDER BY u.createdAt DESC`
-      );
-      return apiSuccess(rows);
-    } finally {
-      conn.release();
-    }
+    const rows = await prisma.user.findMany({
+      where: { role: 'tenaga_medis' },
+      include: { poli: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Format agar ada ID Petugas (berdasarkan ID auto-increment tapi diformat)
+    const formatted = rows.map(u => ({
+      ...u,
+      id_petugas: `MED-${String(u.id_user).padStart(4, '0')}`,
+      nama_poli: u.poli?.nama_poli || "Umum"
+    }));
+
+    return apiSuccess(formatted);
   });
 }
 
@@ -33,39 +34,35 @@ export async function POST(req: NextRequest) {
     if (error) return error;
 
     const body = await req.json();
-    const { username, password, id_poli } = body;
+    const { username, password, id_poli, nama_lengkap } = body;
 
     if (!username || !password || !id_poli) {
       return apiError("Username, password, dan Poli wajib diisi");
     }
 
-    if (password.length < 6) {
-      return apiError("Password minimal 6 karakter");
+    const existing = await prisma.user.findUnique({
+      where: { username }
+    });
+
+    if (existing) {
+      return apiError("Username sudah digunakan", 409);
     }
 
-    const conn = await pool.getConnection();
-    try {
-      // Cek apakah username sudah ada
-      const [existing] = await conn.query<any[]>(
-        "SELECT id_user FROM users WHERE username = ?",
-        [username]
-      );
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-      if (existing.length > 0) {
-        return apiError("Username sudah digunakan", 409);
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        nama_lengkap,
+        password: hashedPassword,
+        role: 'tenaga_medis',
+        id_poli: parseInt(id_poli)
       }
+    });
 
-      const hashedPassword = await bcrypt.hash(password, 12);
 
-      await conn.query(
-        "INSERT INTO users (username, password, role, id_poli, createdAt, updatedAt) VALUES (?, ?, 'tenaga_medis', ?, NOW(), NOW())",
-        [username, hashedPassword, id_poli]
-      );
-
-      return apiSuccess(null, "Akun tenaga medis berhasil dibuat", 201);
-    } finally {
-      conn.release();
-    }
+    return apiSuccess(newUser, "Akun tenaga medis berhasil dibuat", 201);
   });
 }
+
 

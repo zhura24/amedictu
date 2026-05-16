@@ -6,26 +6,34 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    // Proteksi role-based
-    if (path.startsWith("/pasien") && token?.role !== "pasien") {
-      return NextResponse.redirect(new URL("/login", req.url));
+    // Proteksi role-based & Auto-redirection
+    if (path.startsWith("/pasien")) {
+      if (!token) return NextResponse.redirect(new URL("/login", req.url));
+      if (token.role === "tenaga_medis") return NextResponse.redirect(new URL("/medis/dashboard", req.url));
+      if (token.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
     }
-    if (path.startsWith("/medis") && token?.role !== "tenaga_medis") {
-      return NextResponse.redirect(new URL("/login", req.url));
+
+    if (path.startsWith("/medis")) {
+      if (!token) return NextResponse.redirect(new URL("/medis/login", req.url));
+      if (token.role === "pasien") return NextResponse.redirect(new URL("/pasien/dashboard", req.url));
+      if (token.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
     }
-    if (path.startsWith("/admin") && token?.role !== "admin") {
-      return NextResponse.redirect(new URL("/login", req.url));
+
+    if (path.startsWith("/admin")) {
+      if (!token) return NextResponse.redirect(new URL("/admin/login", req.url));
+      if (token.role === "pasien") return NextResponse.redirect(new URL("/pasien/dashboard", req.url));
+      if (token.role === "tenaga_medis") return NextResponse.redirect(new URL("/medis/dashboard", req.url));
     }
+
+    return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
-    },
-    pages: {
-      signIn: "/login",
+      authorized: () => true, // Biarkan fungsi middleware di atas yang menangani redirect
     },
   }
 );
+
 
 export const config = {
   matcher: ["/pasien/:path*", "/medis/:path*", "/admin/:path*"],
