@@ -7,24 +7,37 @@ export default function RekamMedisPage() {
   const [activeTab, setActiveTab] = useState('riwayat');
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedRM = localStorage.getItem('rekamMedisList');
-    if (storedRM) {
-      setPatients(JSON.parse(storedRM));
-    }
+    // Fetch all patients who have medical records
+    fetch('/api/admin/pasien') // Using existing patient API
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          setPatients(res.data);
+        }
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const handleSimpanRekamMedis = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert("Rekam Medis Berhasil Disimpan!");
-    
-    // Remove from local storage list
-    const newList = patients.filter(p => p.id !== selectedPatient.id);
-    setPatients(newList);
-    localStorage.setItem('rekamMedisList', JSON.stringify(newList));
-    
-    setSelectedPatient(null);
+  const [patientRecords, setPatientRecords] = useState<any[]>([]);
+  const [loadingRecords, setLoadingRecords] = useState(false);
+
+  const handleSelectPatient = async (patient: any) => {
+    setSelectedPatient(patient);
+    setLoadingRecords(true);
+    try {
+      const res = await fetch(`/api/rekam-medis?id_pasien=${patient.id_pasien}`);
+      const data = await res.json();
+      if (data.success) {
+        setPatientRecords(data.data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat rekam medis");
+    } finally {
+      setLoadingRecords(false);
+    }
   };
 
   return (
@@ -32,39 +45,38 @@ export default function RekamMedisPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.25rem' }}>Rekam Medis</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Catat hasil pemeriksaan dan resep obat</p>
-        </div>
-        <div style={{ backgroundColor: '#e5e7eb', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-          Senin, 22 April 2026
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Lihat riwayat pemeriksaan pasien</p>
         </div>
       </div>
 
       {!selectedPatient ? (
         <div className={styles.card}>
-          <h3 className={styles.cardTitle} style={{ marginBottom: '1.5rem' }}>Daftar Pasien Menunggu Pemeriksaan</h3>
-          {patients.length > 0 ? (
+          <h3 className={styles.cardTitle} style={{ marginBottom: '1.5rem' }}>Daftar Seluruh Pasien</h3>
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Memuat data pasien...</div>
+          ) : patients.length > 0 ? (
             <div className={styles.tableContainer}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>No. Antrean</th>
+                    <th>No. RM</th>
                     <th>Nama Pasien</th>
-                    <th>Keluhan Awal</th>
+                    <th>NIK</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {patients.map((p, idx) => (
-                    <tr key={idx}>
-                      <td><strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>{p.id}</strong></td>
-                      <td>{p.nama}</td>
-                      <td>{p.keluhan}</td>
+                    <tr key={p.id_pasien}>
+                      <td><strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>{p.no_rekam_medis}</strong></td>
+                      <td>{p.nama_depan} {p.nama_belakang}</td>
+                      <td>{p.nik}</td>
                       <td>
                         <button 
-                          onClick={() => setSelectedPatient(p)}
+                          onClick={() => handleSelectPatient(p)}
                           className={styles.button}
                         >
-                          Periksa
+                          Lihat Riwayat
                         </button>
                       </td>
                     </tr>
@@ -74,7 +86,7 @@ export default function RekamMedisPage() {
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-              Belum ada pasien yang selesai dari antrean.
+              Belum ada data pasien.
             </div>
           )}
         </div>
@@ -86,169 +98,73 @@ export default function RekamMedisPage() {
             {/* PASIEN AKTIF CARD */}
             <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
               <div style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '0.75rem 1.25rem', fontWeight: 600, fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Pasien Aktif</span>
-                <button onClick={() => setSelectedPatient(null)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: 800 }}>X</button>
+                <span>Detail Pasien</span>
+                <button onClick={() => setSelectedPatient(null)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontWeight: 800 }}>Tutup</button>
               </div>
               <div style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
                   <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.25rem' }}>
-                    {selectedPatient.nama.substring(0, 2).toUpperCase()}
+                    {selectedPatient.nama_depan.substring(0, 1).toUpperCase()}{selectedPatient.nama_belakang.substring(0, 1).toUpperCase()}
                   </div>
                   <div>
-                    <h3 style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '1rem' }}>{selectedPatient.nama}</h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No. Antrian: <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{selectedPatient.id}</span></p>
+                    <h3 style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '1rem' }}>{selectedPatient.nama_depan} {selectedPatient.nama_belakang}</h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No. RM: <span style={{ color: 'var(--primary)', fontWeight: 700 }}>{selectedPatient.no_rekam_medis}</span></p>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.875rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>No. Rekam Medis</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedPatient.no_rekam_medis || 'RM-000123'}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>NIK</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedPatient.nik}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>Jenis Kelamin</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedPatient.jenis_kelamin || '-'}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedPatient.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Tanggal Lahir</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedPatient.tgl_lahir || '-'}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>Tempat Lahir</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedPatient.tempat_lahir || '-'}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>No. Telepon</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{selectedPatient.no_telp || '-'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* RIWAYAT KUNJUNGAN CARD */}
-            <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-              <div style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '0.75rem 1.25rem', fontWeight: 600, fontSize: '0.875rem' }}>
-                Riwayat Kunjungan
-              </div>
-              <div style={{ padding: '1.25rem' }}>
-                <div style={{ border: '1px solid #e5e7eb', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{selectedPatient.waktu}</p>
-                  <p style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>Keluhan Awal</p>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{selectedPatient.keluhan}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* RIGHT COLUMN */}
-          <div style={{ flex: 1, backgroundColor: 'white', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-            {/* TABS */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
-              <div 
-                style={{ padding: '1rem 2rem', fontWeight: 600, fontSize: '0.875rem', color: activeTab === 'riwayat' ? 'var(--primary)' : 'var(--text-muted)', borderBottom: activeTab === 'riwayat' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer' }}
-                onClick={() => setActiveTab('riwayat')}
-              >
-                Riwayat Kunjungan
-              </div>
-              <div 
-                style={{ padding: '1rem 2rem', fontWeight: 600, fontSize: '0.875rem', color: activeTab === 'resep' ? 'var(--primary)' : 'var(--text-muted)', borderBottom: activeTab === 'resep' ? '2px solid var(--primary)' : '2px solid transparent', cursor: 'pointer' }}
-                onClick={() => setActiveTab('resep')}
-              >
-                Resep Obat
-              </div>
-            </div>
-
-            <div style={{ padding: '2rem' }}>
-              <form onSubmit={handleSimpanRekamMedis}>
-                
-                {activeTab === 'riwayat' && (
-                  <>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>Data Vital Pasien</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>TEKANAN DARAH (MMHG)</label>
-                        <input type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>SUHU TUBUH</label>
-                        <input type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>DENYUT NADI (BPM)</label>
-                        <input type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>BERAT BADAN (KG)</label>
-                        <input type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>TINGGI BADAN (CM)</label>
-                        <input type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>SATURASI O2 (%)</label>
-                        <input type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                      </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Riwayat Rekam Medis</h2>
+            
+            {loadingRecords ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>Memuat rekam medis...</div>
+            ) : patientRecords.length > 0 ? (
+              patientRecords.map((record) => (
+                <div key={record.id_rekam_medis} className={styles.card} style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                      {new Date(record.tanggal_periksa).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Poli: {record.nama_poli || "Umum"}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Keluhan</p>
+                      <p style={{ marginBottom: '0.75rem' }}>{record.keluhan}</p>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Diagnosa</p>
+                      <p style={{ fontWeight: 600 }}>{record.diagnosa}</p>
                     </div>
-
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>Hasil Pemeriksaan</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>KELUHAN UTAMA PASIEN</label>
-                        <textarea defaultValue={selectedPatient.keluhan} rows={3} placeholder="Deskripsikan keluhan yang disampaikan pasien secara detail..." style={{ width: '100%', padding: '0.875rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)', resize: 'vertical', fontFamily: 'inherit' }}></textarea>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>DIAGNOSA DOKTER</label>
-                        <textarea required rows={3} placeholder="Masukkan diagnosa berdasarkan hasil pemeriksaan..." style={{ width: '100%', padding: '0.875rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)', resize: 'vertical', fontFamily: 'inherit' }}></textarea>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>TINDAKAN MEDIS YANG DILAKUKAN</label>
-                        <textarea required rows={3} placeholder="Deskripsikan tindakan medis yang dilakukan..." style={{ width: '100%', padding: '0.875rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)', resize: 'vertical', fontFamily: 'inherit' }}></textarea>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>CATATAN & REKOMENDASI DOKTER</label>
-                        <textarea rows={3} placeholder="Saran dokter, rekomendasi kontrol, pantangan, dll..." style={{ width: '100%', padding: '0.875rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)', resize: 'vertical', fontFamily: 'inherit' }}></textarea>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {activeTab === 'resep' && (
-                  <div style={{ marginBottom: '2rem' }}>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>Resep Obat</h3>
-                    <div style={{ backgroundColor: '#f9fafb', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px dashed #cbd5e1' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>NAMA OBAT</label>
-                          <input type="text" placeholder="Contoh: Paracetamol 500mg" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>ATURAN MINUM</label>
-                          <input type="text" placeholder="Contoh: 3 x 1 Sesudah Makan" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                        </div>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>NAMA OBAT TAMBAHAN</label>
-                          <input type="text" placeholder="Contoh: Amoxicillin 500mg" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>ATURAN MINUM TAMBAHAN</label>
-                          <input type="text" placeholder="Contoh: 3 x 1 Habiskan" style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 'var(--radius-md)' }} />
-                        </div>
-                      </div>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>* Resep ini akan diteruskan langsung ke bagian farmasi / apotek.</p>
+                    <div>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Resep Obat</p>
+                      <p style={{ fontWeight: 600, color: 'var(--success)' }}>{record.resep_obat}</p>
+                      <p style={{ fontSize: '0.875rem', fontStyle: 'italic' }}>{record.aturan_minum}</p>
                     </div>
                   </div>
-                )}
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                  <button type="button" onClick={() => setSelectedPatient(null)} style={{ padding: '0.75rem 1.5rem', backgroundColor: 'white', border: '1px solid #d1d5db', color: 'var(--text-main)', borderRadius: 'var(--radius-md)', fontWeight: 600, cursor: 'pointer' }}>
-                    Batal
-                  </button>
-                  <button type="submit" style={{ padding: '0.75rem 1.5rem', backgroundColor: 'var(--primary)', border: 'none', color: 'white', borderRadius: 'var(--radius-md)', fontWeight: 600, cursor: 'pointer' }}>
-                    Simpan Rekam Medis
-                  </button>
                 </div>
-
-              </form>
-            </div>
+              ))
+            ) : (
+              <div className={styles.card} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                Belum ada catatan rekam medis untuk pasien ini.
+              </div>
+            )}
           </div>
 
         </div>

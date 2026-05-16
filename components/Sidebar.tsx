@@ -20,6 +20,7 @@ export default function Sidebar({ role }: SidebarProps) {
           { href: "/pasien/dashboard", label: "Beranda", icon: "squares" },
           { href: "/pasien/ambil-antrean", label: "Ambil Antrian", icon: "calendar" },
           { href: "/pasien/riwayat", label: "Riwayat Antrian", icon: "history" },
+          { href: "/pasien/rekam-medis", label: "Rekam Medis", icon: "person" },
         ]
       },
       {
