@@ -61,6 +61,51 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
 
       await conn.commit();
+
+      // --- TAMBAHAN NOTIFIKASI ---
+      try {
+        const [antrianRow]: any = await conn.query(
+          "SELECT a.*, p.id_user FROM antrian a JOIN pasien p ON a.id_pasien = p.id_pasien WHERE a.id_antrian = ?", 
+          [id]
+        );
+        
+        if (antrianRow.length > 0) {
+          const pesanNotif: Record<string, string> = {
+            dipanggil: "Nomor antrian Anda sedang dipanggil! Segera menuju loket.",
+            selesai: "Antrian Anda telah selesai. Terima kasih sudah berkunjung.",
+            dibatalkan: "Antrian Anda telah dibatalkan.",
+          };
+          
+          const jenisNotif = `antrian_${status}`;
+          
+          // 1. Simpan ke Database
+          await conn.query(
+            "INSERT INTO notifikasi (id_user, pesan, jenis, createdAt) VALUES (?, ?, ?, NOW())",
+            [antrianRow[0].id_user, pesanNotif[status] || `Status antrean Anda berubah menjadi ${status}`, jenisNotif]
+          );
+
+          // 2. Trigger Pusher (Real-time)
+          const Pusher = require("pusher");
+          const pusher = new Pusher({
+            appId: process.env.PUSHER_APP_ID,
+            key: process.env.PUSHER_KEY,
+            secret: process.env.PUSHER_SECRET,
+            cluster: process.env.PUSHER_CLUSTER,
+            useTLS: true,
+          });
+
+          await pusher.trigger(`antrian-${antrianRow[0].id_pasien}`, "status-update", {
+            id_antrian: id,
+            status: status,
+            nomor_antrian: antrianRow[0].nomor_antrian,
+            pesan: pesanNotif[status] || "",
+          });
+        }
+      } catch (notifErr) {
+        console.error("Gagal mengirim notifikasi:", notifErr);
+      }
+      // --- END NOTIFIKASI ---
+
       return apiSuccess(null, `Antrean berhasil diperbarui`);
     } catch (err: any) {
       await conn.rollback();

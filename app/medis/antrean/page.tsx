@@ -134,8 +134,21 @@ export default function KelolaAntrean() {
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <button onClick={() => handleOpenModal(antrean)} className={styles.button} style={{ backgroundColor: 'var(--success)' }}>Selesai</button>
                         
-                        {antrean.waktu_dipanggil && (
+                        {antrean.status === "dipanggil" && (
                           (() => {
+                            // Jika waktu_dipanggil tidak ada (data lama), izinkan batal langsung
+                            if (!antrean.waktu_dipanggil) {
+                              return (
+                                <button 
+                                  onClick={() => handleUpdateStatus(antrean.id_antrian, "dibatalkan")} 
+                                  className={styles.button} 
+                                  style={{ backgroundColor: '#e53e3e' }}
+                                >
+                                  Batal (Manual)
+                                </button>
+                              );
+                            }
+
                             const callTime = new Date(antrean.waktu_dipanggil).getTime();
                             const diffMinutes = (now - callTime) / 60000;
                             
@@ -155,8 +168,8 @@ export default function KelolaAntrean() {
                               );
                             } else {
                               return (
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                  Tunggu {Math.ceil(5 - diffMinutes)}m untuk opsi Batal
+                                <span style={{ fontSize: '0.75rem', color: '#856404', fontStyle: 'italic', backgroundColor: '#fff3cd', padding: '2px 8px', borderRadius: '4px' }}>
+                                  Bisa batal dalam {Math.ceil(5 - diffMinutes)}m
                                 </span>
                               );
                             }
