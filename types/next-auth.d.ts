@@ -9,6 +9,7 @@ declare module "next-auth" {
       username: string;
       role: string;
       id_pasien: number | null;
+      id_poli: number | null;
       nama: string;
       email?: string | null;
     };
@@ -21,6 +22,7 @@ declare module "next-auth/jwt" {
     username: string;
     role: string;
     id_pasien: number | null;
+    id_poli: number | null;
     nama: string;
   }
 }
