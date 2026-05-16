@@ -41,10 +41,15 @@ export default function AdminLoginPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.leftPanel}>
+      <div className={styles.leftPanel} style={{ backgroundColor: '#f8fafc' }}>
         <div className={styles.formWrapper}>
-          <h2 className={styles.title}>Login Admin</h2>
-          <p className={styles.subtitle}>Masuk untuk akses administrator</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ width: '8px', height: '24px', backgroundColor: '#334155', borderRadius: '4px' }}></div>
+            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: '#334155', fontSize: '0.75rem' }}>PORTAL ADMINISTRATOR</span>
+          </div>
+
+          <h2 className={styles.title}>System Control</h2>
+          <p className={styles.subtitle}>Masuk untuk akses manajemen tingkat tinggi</p>
           
           {error && (
             <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid #f87171' }}>
@@ -54,7 +59,7 @@ export default function AdminLoginPage() {
           
           <form onSubmit={handleLogin}>
             <div className={styles.formGroup}>
-              <label htmlFor="username" className={styles.label}>USERNAME</label>
+              <label htmlFor="username" className={styles.label}>ADMIN ID</label>
               <input 
                 type="text" 
                 id="username" 
@@ -67,7 +72,7 @@ export default function AdminLoginPage() {
             </div>
             
             <div className={styles.formGroup}>
-              <label htmlFor="password" className={styles.label}>PASSWORD</label>
+              <label htmlFor="password" className={styles.label}>ACCESS KEY</label>
               <div className={styles.passwordField}>
                 <input 
                   type={showPassword ? "text" : "password"} 
@@ -94,13 +99,13 @@ export default function AdminLoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button} disabled={isLoading}>
-              {isLoading ? "Memproses..." : "Masuk Sebagai Admin"}
+            <button type="submit" className={styles.button} style={{ backgroundColor: '#1e293b' }} disabled={isLoading}>
+              {isLoading ? "Authenticating..." : "Authorize Access"}
             </button>
           </form>
           
           <p className={styles.linkText} style={{ marginTop: '2rem' }}>
-            <Link href="/" className={styles.link}>&larr; Kembali ke Beranda</Link>
+            <Link href="/" className={styles.link} style={{ color: '#64748b' }}>&larr; Exit to Landing Page</Link>
           </p>
         </div>
       </div>

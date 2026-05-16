@@ -52,15 +52,20 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.leftPanel}>
+      <div className={styles.leftPanel} style={{ backgroundColor: '#f0f7ff' }}>
         <div className={styles.formWrapper}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ width: '8px', height: '24px', backgroundColor: '#3b82f6', borderRadius: '4px' }}></div>
+            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: '#1e40af', fontSize: '0.75rem' }}>PORTAL PASIEN</span>
+          </div>
+
           <div className={styles.switchContainer}>
-            <button className={`${styles.switchButton} ${styles.active}`}>Masuk</button>
+            <button className={`${styles.switchButton} ${styles.active}`} style={{ color: '#1e40af' }}>Masuk</button>
             <button className={styles.switchButton} onClick={() => router.push('/register')}>Daftar</button>
           </div>
 
-          <h2 className={styles.title}>Selamat Datang Kembali</h2>
-          <p className={styles.subtitle}>Masuk untuk mengakses sistem antrian Anda</p>
+          <h2 className={styles.title}>Selamat Datang</h2>
+          <p className={styles.subtitle}>Masuk untuk mengambil antrean dan cek rekam medis</p>
           
           {error && (
             <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid #f87171' }}>
@@ -70,7 +75,7 @@ export default function LoginPage() {
           
           <form onSubmit={handleLogin}>
             <div className={styles.formGroup}>
-              <label htmlFor="username" className={styles.label}>USERNAME / NOMOR TELEPON</label>
+              <label htmlFor="username" className={styles.label}>USERNAME / NO. HP</label>
               <input 
                 type="text" 
                 id="username" 
@@ -108,25 +113,17 @@ export default function LoginPage() {
                   )}
                 </span>
               </div>
-              <button 
-                type="button" 
-                onClick={() => alert('Fitur lupa kata sandi belum tersedia')} 
-                className={styles.forgotPassword} 
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                Lupa Kata Sandi?
-              </button>
             </div>
             
-            <button type="submit" className={styles.button} disabled={isLoading}>
-              {isLoading ? "Sedang Masuk..." : "Masuk"}
+            <button type="submit" className={styles.button} style={{ backgroundColor: '#2563eb' }} disabled={isLoading}>
+              {isLoading ? "Sedang Masuk..." : "Masuk ke Dashboard"}
             </button>
           </form>
           
           <div className={styles.divider}>atau</div>
           
           <p className={styles.linkText}>
-            Belum punya akun? <Link href="/register" className={styles.link}>Daftar sekarang</Link>
+            Belum punya akun? <Link href="/register" className={styles.link} style={{ color: '#2563eb' }}>Daftar sekarang</Link>
           </p>
         </div>
       </div>

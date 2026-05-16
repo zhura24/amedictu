@@ -41,10 +41,15 @@ export default function MedisLoginPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.leftPanel}>
+      <div className={styles.leftPanel} style={{ backgroundColor: '#f0fdfa' }}>
         <div className={styles.formWrapper}>
-          <h2 className={styles.title}>Login Tenaga Medis</h2>
-          <p className={styles.subtitle}>Silakan masuk ke portal petugas</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ width: '8px', height: '24px', backgroundColor: '#0d9488', borderRadius: '4px' }}></div>
+            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: '#0d9488', fontSize: '0.75rem' }}>PORTAL TENAGA MEDIS</span>
+          </div>
+
+          <h2 className={styles.title}>Login Petugas</h2>
+          <p className={styles.subtitle}>Silakan masuk ke portal medis terpadu</p>
           
           {error && (
             <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid #f87171' }}>
@@ -54,7 +59,7 @@ export default function MedisLoginPage() {
           
           <form onSubmit={handleLogin}>
             <div className={styles.formGroup}>
-              <label htmlFor="username" className={styles.label}>USERNAME</label>
+              <label htmlFor="username" className={styles.label}>USERNAME PETUGAS</label>
               <input 
                 type="text" 
                 id="username" 
@@ -94,13 +99,13 @@ export default function MedisLoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button} disabled={isLoading}>
-              {isLoading ? "Memproses..." : "Masuk"}
+            <button type="submit" className={styles.button} style={{ backgroundColor: '#0d9488' }} disabled={isLoading}>
+              {isLoading ? "Memverifikasi..." : "Masuk Petugas"}
             </button>
           </form>
           
           <p className={styles.linkText} style={{ marginTop: '2rem' }}>
-            <Link href="/" className={styles.link}>&larr; Kembali ke Beranda</Link>
+            <Link href="/" className={styles.link} style={{ color: '#0d9488' }}>&larr; Kembali ke Beranda</Link>
           </p>
         </div>
       </div>
