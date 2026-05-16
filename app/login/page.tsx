@@ -24,30 +24,21 @@ export default function LoginPage() {
         redirect: false,
         username,
         password,
+        role: "pasien" // Kunci agar hanya pasien yang bisa login di sini
       });
 
       if (result?.error) {
         setError("Username atau kata sandi salah!");
         setIsLoading(false);
       } else {
-        // Ambil data session terbaru untuk cek role
-        const res = await fetch("/api/auth/session");
-        const session = await res.json();
-        const role = session?.user?.role;
-
-        if (role === "admin") {
-          router.push("/admin/dashboard");
-        } else if (role === "tenaga_medis") {
-          router.push("/medis/dashboard");
-        } else {
-          router.push("/pasien/dashboard");
-        }
+        router.push("/pasien/dashboard");
       }
     } catch (err) {
       setError("Terjadi kesalahan sistem. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
+
   };
 
   return (
@@ -124,6 +115,10 @@ export default function LoginPage() {
           
           <p className={styles.linkText}>
             Belum punya akun? <Link href="/register" className={styles.link} style={{ color: '#2563eb' }}>Daftar sekarang</Link>
+          </p>
+
+          <p className={styles.linkText} style={{ marginTop: '2rem' }}>
+            <Link href="/" className={styles.link} style={{ color: '#1e40af' }}>&larr; Kembali ke Beranda</Link>
           </p>
         </div>
       </div>

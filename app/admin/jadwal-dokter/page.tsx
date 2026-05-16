@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import styles from "../../../components/UI.module.css";
 
 export default function JadwalDokterPage() {
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [jadwalList, setJadwalList] = useState<any[]>([]);
+  const [medisList, setMedisList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newJadwal, setNewJadwal] = useState({
@@ -15,24 +16,47 @@ export default function JadwalDokterPage() {
     jam_selesai: "12:00"
   });
 
-  const fetchJadwal = async () => {
+  const fetchData = async () => {
     try {
-      const res = await fetch("/api/jadwal-dokter");
-      const data = await res.json();
-      if (data.success) setDoctors(data.data);
+      const [resJadwal, resMedis] = await Promise.all([
+        fetch("/api/jadwal-dokter"),
+        fetch("/api/admin/medis")
+      ]);
+      const dataJadwal = await resJadwal.json();
+      const dataMedis = await resMedis.json();
+      
+      if (dataJadwal.success) setJadwalList(dataJadwal.data);
+      if (dataMedis.success) setMedisList(dataMedis.data);
     } catch (err) {
-      console.error("Gagal memuat jadwal");
+      console.error("Gagal memuat data");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchJadwal();
+    fetchData();
   }, []);
+
+  const handleDoctorChange = (username: string) => {
+    const selectedDoc = medisList.find(m => m.username === username);
+    if (selectedDoc) {
+      setNewJadwal({
+        ...newJadwal,
+        nama_dokter: selectedDoc.username,
+        spesialis: selectedDoc.nama_poli || "Umum"
+      });
+    } else {
+      setNewJadwal({ ...newJadwal, nama_dokter: "", spesialis: "" });
+    }
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newJadwal.nama_dokter) {
+      alert("Silakan pilih dokter terlebih dahulu");
+      return;
+    }
     try {
       const res = await fetch("/api/jadwal-dokter", {
         method: "POST",
@@ -43,7 +67,8 @@ export default function JadwalDokterPage() {
       if (data.success) {
         alert("Jadwal berhasil ditambahkan!");
         setShowAddForm(false);
-        fetchJadwal();
+        setNewJadwal({ ...newJadwal, nama_dokter: "", spesialis: "" });
+        fetchData();
       } else {
         alert(data.error);
       }
@@ -68,15 +93,33 @@ export default function JadwalDokterPage() {
 
       {showAddForm && (
         <div className={styles.card} style={{ marginBottom: '2rem', maxWidth: '600px' }}>
+          <h2 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 700 }}>Pilih Dokter & Atur Jam</h2>
           <form onSubmit={handleAdd}>
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Nama Dokter</label>
-              <input type="text" required value={newJadwal.nama_dokter} onChange={e => setNewJadwal({...newJadwal, nama_dokter: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }} />
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Pilih Dokter</label>
+              <select 
+                required 
+                value={newJadwal.nama_dokter} 
+                onChange={e => handleDoctorChange(e.target.value)}
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+              >
+                <option value="">-- Pilih Dokter Terdaftar --</option>
+                {medisList.map(m => (
+                  <option key={m.id_user} value={m.username}>{m.username} ({m.nama_poli || "Umum"})</option>
+                ))}
+              </select>
             </div>
+            
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Spesialis / Poli</label>
-              <input type="text" required value={newJadwal.spesialis} onChange={e => setNewJadwal({...newJadwal, spesialis: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }} />
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Spesialis / Poli (Otomatis)</label>
+              <input 
+                type="text" 
+                readOnly 
+                value={newJadwal.spesialis} 
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd', backgroundColor: '#f9fafb', color: '#6b7280' }} 
+              />
             </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Hari</label>
@@ -109,7 +152,7 @@ export default function JadwalDokterPage() {
             </tr>
           </thead>
           <tbody>
-            {doctors.map((doc) => (
+            {jadwalList.map((doc) => (
               <tr key={doc.id_jadwal}>
                 <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{doc.nama_dokter}</td>
                 <td>{doc.spesialis}</td>
@@ -117,7 +160,7 @@ export default function JadwalDokterPage() {
                 <td>{doc.jam_mulai} - {doc.jam_selesai}</td>
               </tr>
             ))}
-            {doctors.length === 0 && (
+            {jadwalList.length === 0 && (
               <tr>
                 <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>Belum ada data jadwal di database.</td>
               </tr>
@@ -128,4 +171,5 @@ export default function JadwalDokterPage() {
     </div>
   );
 }
+
 

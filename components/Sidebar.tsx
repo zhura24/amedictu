@@ -107,8 +107,19 @@ export default function Sidebar({ role }: SidebarProps) {
 
   const navGroups = links[role] || [];
 
+  const getSidebarStyle = () => {
+    switch (role) {
+      case "pasien": return { backgroundColor: '#1e40af' }; // Blue
+      case "medis": return { backgroundColor: '#0d9488' }; // Teal
+      case "admin": return { backgroundColor: '#1e293b' }; // Dark Slate
+      default: return { backgroundColor: 'var(--primary-dark)' };
+    }
+  };
+
+  const sidebarStyle = getSidebarStyle();
+
   return (
-    <aside className={styles.sidebar} style={{ backgroundColor: 'var(--primary-dark)', padding: '2rem 1rem' }}>
+    <aside className={styles.sidebar} style={{ ...sidebarStyle, padding: '2rem 1rem' }}>
       <div className={styles.logo} style={{ color: 'white', marginBottom: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px', marginRight: '10px' }}>
           <path d="M50 10L10 40V90H35V60H65V90H90V40L50 10Z" stroke="white" strokeWidth="6" strokeLinejoin="round"/>

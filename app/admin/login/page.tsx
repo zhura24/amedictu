@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
           </form>
           
           <p className={styles.linkText} style={{ marginTop: '2rem' }}>
-            <Link href="/" className={styles.link} style={{ color: '#64748b' }}>&larr; Exit to Landing Page</Link>
+            <Link href="/" className={styles.link} style={{ color: '#64748b' }}>&larr; Kembali ke Beranda</Link>
           </p>
         </div>
       </div>
