@@ -131,15 +131,13 @@ export default function LoginPage() {
         </div>
       </div>
       
-      <div className={styles.rightPanel}>
-        <svg className={styles.logoIcon} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M50 10L10 40V90H35V60H65V90H90V40L50 10Z" stroke="white" strokeWidth="4" strokeLinejoin="round"/>
-          <circle cx="50" cy="55" r="15" stroke="white" strokeWidth="4"/>
-          <path d="M50 45V65M40 55H60" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+      <div className={styles.rightPanel} style={{ background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)' }}>
+        <svg className={styles.logoIcon} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
         </svg>
         <h1 className={styles.logo}>AMEDICTU</h1>
         <p className={styles.welcomeText}>
-          Antrean Medik Tunggu
+          Portal Pasien untuk pendaftaran antrean dan riwayat medis mandiri.
         </p>
       </div>
     </div>

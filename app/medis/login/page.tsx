@@ -105,11 +105,9 @@ export default function MedisLoginPage() {
         </div>
       </div>
       
-      <div className={styles.rightPanel}>
-        <svg className={styles.logoIcon} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M50 10L10 40V90H35V60H65V90H90V40L50 10Z" stroke="white" strokeWidth="4" strokeLinejoin="round"/>
-          <circle cx="50" cy="55" r="15" stroke="white" strokeWidth="4"/>
-          <path d="M50 45V65M40 55H60" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+      <div className={styles.rightPanel} style={{ background: 'linear-gradient(135deg, #0d9488 0%, #2dd4bf 100%)' }}>
+        <svg className={styles.logoIcon} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
         </svg>
         <h1 className={styles.logo}>AMEDICTU</h1>
         <p className={styles.welcomeText}>
