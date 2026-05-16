@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import pool from "@/lib/db";
 import { requireAuth, apiSuccess, apiError, withErrorHandler } from "@/lib/api-helpers";
+import { prisma } from "@/lib/prisma";
+
 
 export const dynamic = 'force-dynamic';
 
