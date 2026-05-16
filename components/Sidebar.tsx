@@ -157,8 +157,9 @@ export default function Sidebar({ role }: SidebarProps) {
       <div className={styles.logout} style={{ marginTop: 'auto', paddingTop: '2rem' }}>
         <button
           className={styles.logoutBtn}
-          onClick={() => {
-            signOut();
+          onClick={async () => {
+            await signOut({ redirect: false });
+            window.location.href = "/";
           }}
           style={{
             display: 'flex',
