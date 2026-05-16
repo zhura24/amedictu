@@ -15,15 +15,16 @@ export async function GET(req: NextRequest) {
 
     let where: any = {};
 
+    console.log(`[API Antrean] User: ${session.user.username}, Role: ${session.user.role}, Poli ID: ${session.user.id_poli}`);
+
     // Filter berdasarkan role
     if (session.user.role === "pasien") {
       where.id_pasien = session.user.id_pasien;
     } else if (session.user.role === "tenaga_medis") {
-      // DOKTER HANYA LIHAT POLI MEREKA SENDIRI
       if (session.user.id_poli) {
         where.id_poli = session.user.id_poli;
       } else {
-        return apiError("Akses ditolak: Anda tidak ditugaskan ke poli manapun.", 403);
+        return apiError("Akses ditolak: Anda belum ditugaskan ke poliklinik manapun. Hubungi Admin.", 403);
       }
     } else if (session.user.role === "admin" && poliIdParam) {
       where.id_poli = parseInt(poliIdParam);
@@ -41,16 +42,19 @@ export async function GET(req: NextRequest) {
       ]
     });
 
-    // Format data agar sesuai UI
+    // Format data agar sesuai UI (dukung nama_pasien dan nama_depan/belakang)
     const formatted = rows.map(r => ({
       ...r,
       nama_pasien: `${r.pasien.nama_depan} ${r.pasien.nama_belakang}`,
+      nama_depan: r.pasien.nama_depan,
+      nama_belakang: r.pasien.nama_belakang,
       nama_poli: r.poli.nama_poli
     }));
 
     return apiSuccess(formatted);
   });
 }
+
 
 export async function POST(req: NextRequest) {
   return withErrorHandler(async () => {
