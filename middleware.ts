@@ -7,23 +7,27 @@ export default withAuth(
     const path = req.nextUrl.pathname;
 
     // Proteksi role-based & Auto-redirection
+    const isLoginPage = path.endsWith("/login");
+    
     if (path.startsWith("/pasien")) {
-      if (!token) return NextResponse.redirect(new URL("/login", req.url));
-      if (token.role === "tenaga_medis") return NextResponse.redirect(new URL("/medis/dashboard", req.url));
-      if (token.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+      if (!token && !isLoginPage) return NextResponse.redirect(new URL("/login", req.url));
+      if (!isLoginPage && token?.role === "tenaga_medis") return NextResponse.redirect(new URL("/medis/dashboard", req.url));
+      if (!isLoginPage && token?.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
     }
 
     if (path.startsWith("/medis")) {
-      if (!token) return NextResponse.redirect(new URL("/medis/login", req.url));
-      if (token.role === "pasien") return NextResponse.redirect(new URL("/pasien/dashboard", req.url));
-      if (token.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+      if (!token && !isLoginPage) return NextResponse.redirect(new URL("/medis/login", req.url));
+      if (!isLoginPage && token?.role === "pasien") return NextResponse.redirect(new URL("/pasien/dashboard", req.url));
+      if (!isLoginPage && token?.role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
     }
 
     if (path.startsWith("/admin")) {
-      if (!token) return NextResponse.redirect(new URL("/admin/login", req.url));
-      if (token.role === "pasien") return NextResponse.redirect(new URL("/pasien/dashboard", req.url));
-      if (token.role === "tenaga_medis") return NextResponse.redirect(new URL("/medis/dashboard", req.url));
+      if (!token && !isLoginPage) return NextResponse.redirect(new URL("/admin/login", req.url));
+      if (!isLoginPage && token?.role === "pasien") return NextResponse.redirect(new URL("/pasien/dashboard", req.url));
+      if (!isLoginPage && token?.role === "tenaga_medis") return NextResponse.redirect(new URL("/medis/dashboard", req.url));
     }
+
+
 
     return NextResponse.next();
   },

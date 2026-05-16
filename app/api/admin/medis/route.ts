@@ -1,8 +1,8 @@
 // app/api/admin/medis/route.ts
 import { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import pool from "@/lib/db";
 import { requireAuth, apiSuccess, apiError, withErrorHandler } from "@/lib/api-helpers";
+
 import { prisma } from "@/lib/prisma";
 
 
@@ -13,18 +13,19 @@ export async function GET(req: NextRequest) {
     const { error } = await requireAuth(["admin"]);
     if (error) return error;
 
-    const rows = await prisma.user.findMany({
+    const rows = await (prisma.user as any).findMany({
       where: { role: 'tenaga_medis' },
       include: { poli: true },
       orderBy: { createdAt: 'desc' }
     });
     
     // Format agar ada ID Petugas (berdasarkan ID auto-increment tapi diformat)
-    const formatted = rows.map(u => ({
+    const formatted = (rows as any[]).map((u: any) => ({
       ...u,
       id_petugas: `MED-${String(u.id_user).padStart(4, '0')}`,
       nama_poli: u.poli?.nama_poli || "Umum"
     }));
+
 
     return apiSuccess(formatted);
   });
@@ -59,8 +60,9 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         role: 'tenaga_medis',
         id_poli: parseInt(id_poli)
-      }
+      } as any
     });
+
 
 
     return apiSuccess(newUser, "Akun tenaga medis berhasil dibuat", 201);
