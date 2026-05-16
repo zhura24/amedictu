@@ -59,6 +59,7 @@ export default function Sidebar({ role }: SidebarProps) {
         group: "ADMINISTRASI",
         items: [
           { href: "/admin/kelola-pasien", label: "Kelola Data Pasien", icon: "person" },
+          { href: "/admin/kelola-medis", label: "Kelola Akun Dokter", icon: "person" },
           { href: "/admin/laporan", label: "Laporan", icon: "person" },
         ]
       }
