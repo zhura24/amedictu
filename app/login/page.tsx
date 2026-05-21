@@ -43,15 +43,15 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.leftPanel} style={{ backgroundColor: '#f0f7ff' }}>
+      <div className={styles.leftPanel} style={{ backgroundColor: 'var(--secondary)' }}>
         <div className={styles.formWrapper}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: '8px', height: '24px', backgroundColor: '#3b82f6', borderRadius: '4px' }}></div>
-            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: '#1e40af', fontSize: '0.75rem' }}>PORTAL PASIEN</span>
+            <div style={{ width: '8px', height: '24px', backgroundColor: 'var(--primary)', borderRadius: '4px' }}></div>
+            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: 'var(--primary-dark)', fontSize: '0.75rem' }}>PORTAL PASIEN</span>
           </div>
 
           <div className={styles.switchContainer}>
-            <button className={`${styles.switchButton} ${styles.active}`} style={{ color: '#1e40af' }}>Masuk</button>
+            <button className={`${styles.switchButton} ${styles.active}`} style={{ color: 'var(--primary-dark)' }}>Masuk</button>
             <button className={styles.switchButton} onClick={() => router.push('/register')}>Daftar</button>
           </div>
 
@@ -106,7 +106,7 @@ export default function LoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button} style={{ backgroundColor: '#2563eb' }} disabled={isLoading}>
+            <button type="submit" className={styles.button} style={{ backgroundColor: 'var(--primary)' }} disabled={isLoading}>
               {isLoading ? "Sedang Masuk..." : "Masuk ke Dashboard"}
             </button>
           </form>
@@ -114,16 +114,16 @@ export default function LoginPage() {
           <div className={styles.divider}>atau</div>
           
           <p className={styles.linkText}>
-            Belum punya akun? <Link href="/register" className={styles.link} style={{ color: '#2563eb' }}>Daftar sekarang</Link>
+            Belum punya akun? <Link href="/register" className={styles.link} style={{ color: 'var(--primary)' }}>Daftar sekarang</Link>
           </p>
 
           <p className={styles.linkText} style={{ marginTop: '2rem' }}>
-            <Link href="/" className={styles.link} style={{ color: '#1e40af' }}>&larr; Kembali ke Beranda</Link>
+            <Link href="/" className={styles.link} style={{ color: 'var(--primary-dark)' }}>&larr; Kembali ke Beranda</Link>
           </p>
         </div>
       </div>
       
-      <div className={styles.rightPanel} style={{ background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)' }}>
+      <div className={styles.rightPanel} style={{ background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)' }}>
         <svg className={styles.logoIcon} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
         </svg>

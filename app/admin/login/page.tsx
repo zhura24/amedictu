@@ -41,11 +41,11 @@ export default function AdminLoginPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.leftPanel} style={{ backgroundColor: '#f8fafc' }}>
+      <div className={styles.leftPanel} style={{ backgroundColor: 'var(--secondary)' }}>
         <div className={styles.formWrapper}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: '8px', height: '24px', backgroundColor: '#334155', borderRadius: '4px' }}></div>
-            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: '#334155', fontSize: '0.75rem' }}>PORTAL ADMINISTRATOR</span>
+            <div style={{ width: '8px', height: '24px', backgroundColor: 'var(--primary)', borderRadius: '4px' }}></div>
+            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: 'var(--primary-dark)', fontSize: '0.75rem' }}>PORTAL ADMINISTRATOR</span>
           </div>
 
           <h2 className={styles.title}>System Control</h2>
@@ -99,13 +99,13 @@ export default function AdminLoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button} style={{ backgroundColor: '#1e293b' }} disabled={isLoading}>
+            <button type="submit" className={styles.button} style={{ backgroundColor: 'var(--primary)' }} disabled={isLoading}>
               {isLoading ? "Authenticating..." : "Authorize Access"}
             </button>
           </form>
           
           <p className={styles.linkText} style={{ marginTop: '2rem' }}>
-            <Link href="/" className={styles.link} style={{ color: '#64748b' }}>&larr; Kembali ke Beranda</Link>
+            <Link href="/" className={styles.link} style={{ color: 'var(--text-muted)' }}>&larr; Kembali ke Beranda</Link>
           </p>
         </div>
       </div>

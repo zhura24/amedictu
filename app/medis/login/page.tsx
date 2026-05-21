@@ -44,12 +44,12 @@ export default function MedisLoginPage() {
       <div className={styles.leftPanel}>
         <div className={styles.formWrapper}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: '8px', height: '24px', backgroundColor: '#0d9488', borderRadius: '4px' }}></div>
-            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: '#0d9488', fontSize: '0.75rem' }}>PORTAL TENAGA MEDIS</span>
+            <div style={{ width: '8px', height: '24px', backgroundColor: 'var(--primary)', borderRadius: '4px' }}></div>
+            <span style={{ fontWeight: 800, letterSpacing: '0.1em', color: 'var(--primary)', fontSize: '0.75rem' }}>PORTAL TENAGA MEDIS</span>
           </div>
 
-          <h2 className={styles.title} style={{ fontSize: '1.875rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.5rem' }}>Staff Verification</h2>
-          <p className={styles.subtitle} style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '2rem' }}>Masuk untuk akses sistem pelayanan medis terpadu</p>
+          <h2 className={styles.title} style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--primary-dark)', marginBottom: '0.5rem' }}>Staff Verification</h2>
+          <p className={styles.subtitle} style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>Masuk untuk akses sistem pelayanan medis terpadu</p>
           
           {error && (
             <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.875rem', fontWeight: 500, border: '1px solid #f87171' }}>
@@ -68,7 +68,7 @@ export default function MedisLoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                style={{ backgroundColor: '#eff6ff', border: 'none', padding: '0.875rem 1.25rem' }}
+                style={{ backgroundColor: 'var(--secondary)', border: 'none', padding: '0.875rem 1.25rem' }}
               />
             </div>
             
@@ -83,7 +83,7 @@ export default function MedisLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  style={{ backgroundColor: '#eff6ff', border: 'none', padding: '0.875rem 1.25rem' }}
+                  style={{ backgroundColor: 'var(--secondary)', border: 'none', padding: '0.875rem 1.25rem' }}
                 />
                 <span className={styles.eyeIcon} onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? (
@@ -101,18 +101,18 @@ export default function MedisLoginPage() {
               </div>
             </div>
             
-            <button type="submit" className={styles.button} style={{ backgroundColor: '#1e293b', padding: '1rem', fontWeight: 700, letterSpacing: '0.025em', borderRadius: '0.5rem' }} disabled={isLoading}>
+            <button type="submit" className={styles.button} style={{ backgroundColor: 'var(--primary)', padding: '1rem', fontWeight: 700, letterSpacing: '0.025em', borderRadius: '0.5rem' }} disabled={isLoading}>
               {isLoading ? "Verifying..." : "Authorize Staff"}
             </button>
           </form>
           
           <p className={styles.linkText} style={{ textAlign: 'center', marginTop: '2rem' }}>
-            <Link href="/" className={styles.link} style={{ color: '#94a3b8', fontSize: '0.875rem', textDecoration: 'none' }}>&larr; Kembali ke Beranda</Link>
+            <Link href="/" className={styles.link} style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textDecoration: 'none' }}>&larr; Kembali ke Beranda</Link>
           </p>
         </div>
       </div>
       
-      <div className={styles.rightPanel} style={{ backgroundColor: '#0d9488', background: 'linear-gradient(135deg, #0d9488 0%, #115e59 100%)' }}>
+      <div className={styles.rightPanel} style={{ backgroundColor: 'var(--primary)', background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ border: '4px solid white', borderRadius: '1.5rem', padding: '1.5rem', marginBottom: '2rem' }}>
              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
