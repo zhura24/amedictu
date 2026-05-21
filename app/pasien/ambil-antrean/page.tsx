@@ -164,6 +164,12 @@ export default function AmbilAntrean() {
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Status</span>
                 <strong style={{ color: 'var(--primary)', fontSize: '0.875rem' }}>{isSubmitted ? "MENUNGGU" : "-"}</strong>
               </div>
+              {isSubmitted && antreanResult?.estimasi_tunggu && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '1rem' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Estimasi Dilayani</span>
+                  <strong style={{ color: 'var(--primary)', fontSize: '0.875rem' }}>±{antreanResult.estimasi_tunggu} menit</strong>
+                </div>
+              )}
             </div>
           </div>
 

@@ -87,7 +87,7 @@ export default function PasienDashboard() {
         <div className={styles.card} style={{ textAlign: 'center', padding: '1.5rem' }}>
           <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ESTIMASI DIPANGGIL</p>
           <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--primary)' }}>
-            {myAntrean && myAntrean.status === 'menunggu' ? "±15 menit" : "-"}
+            {myAntrean && myAntrean.status === 'menunggu' ? `±${myAntrean.estimasi_tunggu || 15} menit` : "-"}
           </div>
         </div>
       </div>

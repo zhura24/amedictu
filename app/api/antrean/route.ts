@@ -43,12 +43,30 @@ export async function GET(req: NextRequest) {
     });
 
     // Format data agar sesuai UI (dukung nama_pasien dan nama_depan/belakang)
-    const formatted = rows.map(r => ({
-      ...r,
-      nama_pasien: `${r.pasien.nama_depan} ${r.pasien.nama_belakang}`,
-      nama_depan: r.pasien.nama_depan,
-      nama_belakang: r.pasien.nama_belakang,
-      nama_poli: r.poli.nama_poli
+    const formatted = await Promise.all(rows.map(async r => {
+      let estimasi_menit = 15;
+      if (r.status === "menunggu") {
+        const countAhead = await prisma.antrian.count({
+          where: {
+            id_poli: r.id_poli,
+            tanggal: r.tanggal,
+            status: { in: ["menunggu", "dipanggil", "diperiksa"] },
+            nomor_antrian: { lt: r.nomor_antrian }
+          }
+        });
+        estimasi_menit = (countAhead + 1) * 15;
+      } else if (r.status === "dipanggil" || r.status === "diperiksa") {
+        estimasi_menit = 0;
+      }
+
+      return {
+        ...r,
+        nama_pasien: `${r.pasien.nama_depan} ${r.pasien.nama_belakang}`,
+        nama_depan: r.pasien.nama_depan,
+        nama_belakang: r.pasien.nama_belakang,
+        nama_poli: r.poli.nama_poli,
+        estimasi_tunggu: estimasi_menit
+      };
     }));
 
     return apiSuccess(formatted);
@@ -125,7 +143,27 @@ export async function POST(req: NextRequest) {
         console.error("Gagal mengirim notif ke dokter:", err);
     }
 
-    return apiSuccess({ id_antrian: newAntrian.id_antrian, nomor_antrian: nextNo }, "Antrean berhasil diambil");
+    // Hitung estimasi tunggu untuk antrian baru ini
+    let estimasi_menit = 15;
+    try {
+      const countAhead = await prisma.antrian.count({
+        where: {
+          id_poli: parseInt(id_poli),
+          tanggal: tgl,
+          status: { in: ["menunggu", "dipanggil", "diperiksa"] },
+          nomor_antrian: { lt: nextNo }
+        }
+      });
+      estimasi_menit = (countAhead + 1) * 15;
+    } catch (e) {
+      console.error(e);
+    }
+
+    return apiSuccess({ 
+      id_antrian: newAntrian.id_antrian, 
+      nomor_antrian: nextNo, 
+      estimasi_tunggu: estimasi_menit 
+    }, "Antrean berhasil diambil");
   });
 }
 
